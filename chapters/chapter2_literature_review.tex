@@ -1,0 +1,243 @@
+\chapter{Literature Review}
+\label{ch:lit}
+
+\section{Introduction}
+
+This chapter surveys the research that this project builds upon and
+locates the project in the current literature. The survey is
+organised into three parts: LLM--based AutoML systems; verification
+of generated code and of reasoning; and formal, typed and
+graph--based verification of reasoning. The parts are treated
+separately because they correspond to different correctness questions
+(as formalised in Chapter~\ref{ch:method}) and because each has
+developed its own evaluation style. The chapter closes with a
+synthesis of the research gap that the proposed framework addresses.
+
+\section{Existing Systems}
+
+\subsection{LLM--Based AutoML Pipelines}
+
+The simplest shape of an LLM--driven AutoML system is a feature
+engineering agent that takes a tabular dataset and emits candidate
+feature constructions. CAAFE~\cite{caafe} is a representative
+instance in which the LLM is used to propose context--aware feature
+engineering steps and to iterate on them using data--driven
+feedback. LLMFE~\cite{llmfe} extends this idea into an evolutionary
+loop in which feature engineering is framed as program search guided
+by execution feedback.
+
+Data--centric AutoML is served by CatDB~\cite{catdb}, which uses
+data--catalogue--guided prompts to construct ML pipelines, and by
+FlowPipe~\cite{flowpipe}, which synthesises data--preparation
+pipelines using conditional generative flow networks and
+LLM--derived priors over multi--channel preprocessing. Agentic
+systems such as DS--Agent~\cite{dsagent} and SELA~\cite{sela} go
+further by orchestrating planning, retrieval and search over
+candidate pipelines, with case--based reasoning or tree--search
+guiding the exploration.
+
+Full--pipeline systems such as AutoML--Agent~\cite{automlagent}
+include a multi--agent architecture that spans planning, code
+generation and verification. It performs three verification steps:
+\emph{request verification} (ReqVer), which assesses whether the
+user's instructions are clear and adequate for the ML task;
+\emph{execution verification} (ExecVer), which checks --- by
+prompting, before any code is run --- whether candidate pipelines
+satisfy the user's requirements; and \emph{implementation
+verification} (ImpVer), which validates the outcomes of code that has
+been compiled and executed. In this way AutoML--Agent explicitly
+raises the question of verification inside LLM--driven AutoML, but
+these three steps do not establish a one--to--one relationship
+between individual plan assertions and program implementations. A
+successful implementation--verification verdict therefore does not
+entail plan--program parity. The broader survey of LLMs for building
+and optimising ML workflows~\cite{llmauto} catalogues this landscape
+of systems and the open problems that follow from it.
+
+\subsection{Code and Reasoning Verification}
+
+Program verification has a long history. Classical foundations
+include Hoare's axiomatic basis for computer
+programming~\cite{hoare1969}, abstract interpretation~\cite{cousot1977}
+and model checking~\cite{clarke1999}. These techniques connect
+programs to specifications through rules based on assertions,
+abstract interpretation, model checking or runtime evidence. They
+do not, by themselves, consume LLM reasoning: an LLM plan has to be
+lowered into a restricted specification language first, after which
+the usual verification machinery applies on representable claims
+rather than on universally correct machine learning behaviour.
+
+Executable code benchmarks have shown that behavioural tests give a
+stronger signal than surface similarity~\cite{humaneval,
+programsynthesis}. However, tests only demonstrate claimed behaviour,
+and code generation can leave latent bugs intact~\cite{copilot}. A
+survey of LLMs for code generation~\cite{jiang2026survey} catalogues
+execution--based benchmarks and lists the integration of formal
+verification tools within the LLM pipeline as an open safety
+direction, rather than as an existing capability. Empirical studies of
+code--generation failure modes~\cite{shen2026failure} offer surface
+and runtime error taxonomies alongside decision frameworks that
+directly relate failure patterns to actionable strategies in enhancing
+performance, including through self--critique, multi--model
+collaboration or retrieval--augmented generation. Execution--based
+failure, however, is exactly where these frameworks stop; the project
+in this report takes over from that point and treats reasoning--code
+alignment as the next verification layer.
+
+\subsection{Formal, Typed and Graph--Based Verification of Reasoning}
+
+Chain--of--Thought (CoT) prompting elicits intermediate reasoning
+steps~\cite{wei2023cot}. These steps are not required to reflect the
+model's underlying computation; recent work has shown that LLMs do
+not always say what they think~\cite{turpin2023} and has extended
+CoT--faithfulness evaluation from proprietary models to open--weight
+reasoning models~\cite{young2026lie}, providing a qualitative basis
+for the faithfulness problem. Step--level verifier benchmarks and
+process supervision~\cite{jacovi2024chain, lightman2024} inspect
+chains at a finer granularity than final answers. These approaches
+address the problem of inspectable reasoning mechanisms, which is
+known to be difficult for LLMs to resolve on their own~\cite{tyen2024}.
+
+Typed Chain--of--Thought~\cite{perrier2025} synthesises reasoning
+steps into typed trees that can be validated, demonstrating that the
+tractability of prose can be preserved under constrained
+representations, although the resulting certificate is about the
+reasoning trace rather than the generated AutoML source code.
+CRV~\cite{zhao2026crv} builds an attribution graph of model
+computation and predicts the correctness of reasoning based on the
+graph structure. In both cases, the verified object is an internal
+or near--internal representation of the model, not the executable
+pipeline that an AutoML plan is lowered to.
+
+Structured chain--of--thought has been shown to help code
+generation~\cite{li2025structured}, but structured generation alone
+is not a post--generation proof that all stated steps appear in the
+code exactly as stated. Critique and self--refinement are responses
+to plan errors or evaluator feedback~\cite{selfrefine, critic}; a
+different but executable pipeline can be accepted whenever the
+oracle does not return one.
+
+\section{Review of Research Papers}
+
+Table~\ref{tab:relwork} summarises how representative recent work
+compares with the proposed framework along five axes: the domain
+addressed, the reasoning artifact consumed, the kind of program
+artifact produced, whether the system actually executes code,
+whether it targets AutoML, and whether it establishes a
+mechanical plan--code link.
+
+\begin{table}[H]
+\centering
+\caption{Representative approaches relative to the proposed
+verification layer.}
+\label{tab:relwork}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{p{2.6cm} p{2.6cm} p{2.6cm} p{2.4cm} c c c}
+\toprule
+\textbf{Work} & \textbf{Domain} & \textbf{Reasoning artifact} &
+\textbf{Program artifact} & \textbf{Exec.} & \textbf{AutoML} &
+\textbf{Plan--code link} \\
+\midrule
+AutoML--Agent~\cite{automlagent} & Full--pipeline AutoML &
+Plan guides agents & Implementation run and evaluated & \checkmark &
+\checkmark & -- \\
+
+CatDB~\cite{catdb} & Data--centric ML & Catalogue--guided prompts &
+Generated pipeline executed & \checkmark & \checkmark & -- \\
+
+FlowPipe~\cite{flowpipe} & Data--prep pipelines & LLM--derived
+priors & Policy--generated pipeline & \checkmark & \checkmark & -- \\
+
+Typed CoT~\cite{perrier2025} & Formalised reasoning & Typed
+proof/dataflow & Not AutoML code & -- & -- & -- \\
+
+CRV~\cite{zhao2026crv} & Mechanistic verification & Latent
+attribution graph & No pipeline code & -- & -- & -- \\
+
+Failure--Aware~\cite{shen2026failure} & Generic code generation &
+Absent & Program + error taxonomy & \checkmark & -- & -- \\
+
+Test--based evaluation~\cite{humaneval, programsynthesis} &
+Code generation & Usually absent & Program against tests &
+\checkmark & -- & -- \\
+
+\textbf{Proposed framework} & LLM--driven AutoML & Atomic typed
+claims & AST + pipeline graph & Complementary & \checkmark &
+\checkmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three patterns emerge. First, systems that execute code either do not
+consume plans at all (code benchmarks) or consume them only as
+loose context (full--pipeline AutoML agents). Second, systems that
+formalise reasoning (typed CoT, CRV) operate on representations that
+are not the AutoML program and therefore cannot certify what the
+emitted pipeline does. Third, the verification layers that do exist
+inside LLM--AutoML systems (for example the three AutoML--Agent
+verifiers) check instruction well--formedness, request satisfiability
+and runtime success, but not a per--claim correspondence between the
+plan and the generated code.
+
+\section{Research Gap}
+
+The synthesis above yields a precise gap: \emph{LLM--driven AutoML
+systems can check whether a request is actionable, whether code
+runs, and whether outcomes meet thresholds; reasoning--verification
+methods can check properties of the rationale; but no reviewed
+method provides a code--linked mechanical step that establishes
+whether the emitted AutoML code implements the stated plan.}
+
+This matters because, in multi--agent systems, plans are the
+artifacts that are presented to users, that record intended
+experimental design, that gate human approval and that direct
+delegation. A manager can approve one plan while a coding agent
+realises another. If the code diverges, the explanation offered to
+the user is operationally misleading even when performance is high,
+and downstream auditing can be based on a document that no longer
+describes the deployed system.
+
+Accordingly, the project in this report sets five research questions
+that follow directly from the gap identified above:
+
+\begin{itemize}
+    \item \textbf{RQ1:} Can an AutoML plan be transformed into a
+    representation mechanically comparable with an executable
+    pipeline?
+    \item \textbf{RQ2:} Can alignment verification detect
+    discrepancies missed by execution--only and performance--only
+    checks?
+    \item \textbf{RQ3:} Which categories of reasoning--code
+    misalignment arise in practice?
+    \item \textbf{RQ4:} How does alignment vary with the LLM, the
+    reasoning format, the task and the pipeline complexity?
+    \item \textbf{RQ5:} Can mismatches be localised before final
+    evaluation or deployment?
+\end{itemize}
+
+The associated hypotheses are: $H_1$, execution success does not
+imply alignment; $H_2$, mechanical alignment discriminates aligned
+from misaligned pipelines more reliably than execution success;
+$H_3$, mismatches form stable AutoML--specific categories; and
+$H_4$, mismatch probability increases with operation count and
+dependency depth. These are stated as hypotheses rather than settled
+findings: Chapter~\ref{ch:results} reports preliminary evidence from
+the 270--cell study --- $H_1$ is supported and $H_2$ has preliminary
+support --- and sets out the fuller protocol needed to evaluate $H_3$
+and $H_4$ at scale.
+
+\section{Summary}
+
+Existing LLM--AutoML systems demonstrate that end--to--end
+pipelines can be built by language models, but their verification
+layers focus on request validity, runtime success and headline
+performance. Verification of reasoning in the LLM literature
+focuses on faithful or structured chains and attribution graphs,
+but these are not the AutoML pipeline that is deployed. Classical
+program verification offers the formal apparatus for
+specification--based reasoning, but requires a specification --- which
+an LLM plan does not readily provide. The combination of these
+observations motivates a dedicated \emph{reasoning--code alignment}
+verification layer for LLM--driven AutoML, which is the subject of
+the next chapter.

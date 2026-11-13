@@ -1,0 +1,165 @@
+\chapter{Conclusion and Future Scope}
+\label{ch:conclusion}
+
+\section{Conclusion}
+
+The project set out to answer a single operational question: when an
+LLM--driven AutoML system presents a natural--language or
+semi--structured plan and then emits a Python pipeline, does the
+emitted code mechanically implement the plan it claims to realise?
+Existing evaluations check that the code compiles, that it runs,
+that it does not raise exceptions and that it reaches an acceptable
+score on some metric. None of these checks answers the alignment
+question, which is strictly stronger and which decides whether the
+documentation, approvals and deployment gates that users see
+actually describe the pipeline that is running.
+
+To address this, the project has:
+
+\begin{itemize}
+    \item defined \emph{reasoning--code alignment} as a stand--alone
+    verification problem that is cleanly decoupled from reasoning
+    correctness, program correctness, execution success and
+    predictive performance;
+    \item designed a Reasoning Intermediate Representation of
+    atomic typed claims, a Program Intermediate Representation that
+    fuses abstract syntax, dataflow and library--level semantics,
+    and a mechanical mapping between the two;
+    \item specified coverage, weighted alignment, critical mismatch
+    and localisation measures, together with an AutoML--specific
+    mismatch taxonomy covering missing, contradictory,
+    model--level, parameter--level, ordering, evaluation,
+    data--handling, constraint, unsupported, dead--reasoning and
+    extraneous categories;
+    \item proposed an evaluation protocol against execution--only,
+    performance--only, LLM--judge and keyword/API baselines on
+    natural LLM outputs and on seeded--mutation corpora with
+    human--annotated targets, with a statistical design that
+    reports false--alignment rates, macro--F1 of category detection,
+    and localisation accuracy with appropriate confidence
+    intervals; and
+    \item engineered a running end--to--end implementation --- five
+    FastAPI services and two front--ends, a Redis Queue worker, a
+    configurable LLM runner (Ollama or OpenRouter), a sandboxed
+    executor, a first faithfulness verifier, a PostgreSQL / MinIO
+    store and RQ1--RQ5 analysis handlers; and
+    \item evaluated that implementation on a real 270--cell sweep,
+    where the naive and schema prompt conditions were perfectly
+    reliable, the meta--feature condition was markedly less reliable
+    and more expensive without improving predictive score, and the
+    mechanical verifier flagged seven pipelines that executed and
+    scored well but whose reasoning did not match their code.
+\end{itemize}
+
+The objectives stated in Chapter~\ref{ch:lit} are therefore met at
+three distinct levels, which the report keeps separate.
+\emph{Design and formalisation} of the full reasoning--code alignment
+framework is complete. \emph{Software} exists and runs for the
+pipeline and a first faithfulness verifier, with a larger RIR/PIR
+prototype verifier on a feature branch (not yet merged or validated at
+scale). \emph{Empirical evidence}
+exists for the prompting study and for the core hypothesis that
+execution success does not imply alignment (H1), with preliminary
+support for discrimination (H2). What remains is not design but
+construction and measurement: the graph--based verifier, independent
+pre--code reasoning capture, and the seeded--mutation corpus needed to
+quantify the baseline comparison (H3, H4 and the full RQ2/RQ5
+metrics). The project thus delivers a validated foundation and a
+precise, bounded agenda for the remaining work, rather than a
+completed verifier presented as finished.
+
+Taken together, these contributions position the proposed
+verification layer as a complement, not a replacement, for existing
+AutoML evaluation. Where execution evidence tells us that a
+pipeline \emph{can} succeed, reasoning--code alignment tells us
+whether it has succeeded for the \emph{reason} it was supposed to.
+
+\section{Limitations}
+
+The present system has several limitations that bound the strength
+of its claims.
+
+\textbf{Plan expressiveness.} Natural--language plans may be vague,
+incomplete or even impossible to execute. Structured claims decrease
+ambiguity, but they also change the reasoning distribution and
+ignore helpful context. A learnt RIR extractor may itself reflect
+the extractor's interpretation of the plan rather than the LLM's
+intent.
+
+\textbf{Static analysis of Python.} The arbitrary behaviour of
+Python cannot be determined by static analysis alone, because of
+reflection, dynamic imports, metaprogramming, services, callbacks
+and notebook state limiting graph recovery. Runtime traces only
+exercise paths that were taken. General semantic equivalence is
+undecidable; bounded evidence via behavioural probes necessarily
+leaves such cases as \textsc{unverifiable}.
+
+\textbf{Ontology and ranking.} The proposed verifier relies on
+heuristic operator--ontology mapping and candidate ranking, which lean
+towards common libraries and may not cover custom code well. High
+alignment is also not a guarantee of quality: a pipeline can be
+faithful to its plan yet the plan itself be poor, the data biased or
+the model poorly calibrated. Finally, the emitted reasoning does not
+reveal the model's internal computation; the project checks
+artefact--to--artefact conformance, not mechanistic faithfulness.
+
+\textbf{Scope.} The first version of the system targets
+compositional scikit--learn tabular pipelines. Deep--learning,
+distributed training, multi--modal workflows and notebooks with
+hidden state remain outside scope.
+
+\textbf{LLM supply--chain.} Hosted models, prompts, APIs and
+libraries change over time; alignment numbers must be interpreted
+alongside the model identifiers, dates, temperatures, seeds and
+package versions recorded at run time.
+
+\section{Future Scope}
+
+The project opens several promising directions.
+
+\textbf{Deeper program semantics.} Symbolic execution and SMT
+constraints for parameters and branches, blending static checks with
+runtime monitors and causal traces, can push the verifier past the
+current static--analysis bound.
+
+\textbf{Typed pipeline IRs.} Building typed pipeline IRs for
+proof--carrying AutoML would turn the current best--effort witness
+mapping into a certified contract between the planner and the coder.
+
+\textbf{Broader domains.} Extensions comprise deep--learning and
+multimodal pipelines, contracts between agents, deployment--time
+checks and certified generation.
+
+\textbf{Repair loops.} An optimising repair loop can take the
+localised mismatch and ask a coder to patch only the diverged
+subgraph. This must respect the rule set fixed during evaluation;
+high--impact \textsc{unverifiable} claims should still be subject
+to human approval.
+
+\textbf{Integration into AutoML products.} The verifier can be
+offered as a drop--in library inside existing AutoML products so
+that any pipeline that is deployed can be audited claim by claim
+against the plan that was approved. Such mechanisms would not, by
+definition, make AutoML correct, but would at least allow for one
+promise to be audited: that the code executed implements the
+pipeline claimed by the system.
+
+\section{Final Remarks}
+
+Execution tests can miss a verification problem with LLM--driven
+AutoML. A system may proclaim a consistent strategy for
+preprocessing, model choice, ordering or evaluation, produce code that
+runs and gives a passable score, and still not implement the plan it
+presented; reasoning--code alignment cannot be replaced by execution
+correctness and predictive performance. This project formalised
+alignment, proposed the reasoning and program intermediate
+representations, defined the mechanical verdicts, metrics, taxonomy
+and baselines, and --- crucially --- built a running system and
+measured it. On that first 270--cell run, seven pipelines that
+executed and scored well were caught contradicting their own
+reasoning: direct evidence that the divergence is real and
+mechanically detectable. The open empirical question is now narrower
+and sharper --- how \emph{often} successful AutoML code differs from
+its plan across models, tasks and complexity, and how precisely the
+divergence can be localised --- and the software, protocol and first
+measurements are in place to answer it.

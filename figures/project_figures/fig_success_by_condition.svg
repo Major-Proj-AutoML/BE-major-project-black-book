@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 470" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="760" height="470" fill="#ffffff"/>
+  <text x="380" y="28" text-anchor="middle" font-size="17" font-weight="bold" fill="#222">Success rate (%) by condition and backend</text>
+  <text x="380" y="47" text-anchor="middle" font-size="12" fill="#666">270-cell sweep — 30 cells per bar</text>
+
+  <!-- Y axis + gridlines -->
+  <g stroke="#dddddd" stroke-width="1">
+    <line x1="70" y1="60"  x2="740" y2="60"/>
+    <line x1="70" y1="120" x2="740" y2="120"/>
+    <line x1="70" y1="180" x2="740" y2="180"/>
+    <line x1="70" y1="240" x2="740" y2="240"/>
+    <line x1="70" y1="300" x2="740" y2="300"/>
+  </g>
+  <line x1="70" y1="60" x2="70" y2="360" stroke="#333" stroke-width="1.5"/>
+  <line x1="70" y1="360" x2="740" y2="360" stroke="#333" stroke-width="1.5"/>
+  <g font-size="12" fill="#444" text-anchor="end">
+    <text x="62" y="364">0</text>
+    <text x="62" y="304">20</text>
+    <text x="62" y="244">40</text>
+    <text x="62" y="184">60</text>
+    <text x="62" y="124">80</text>
+    <text x="62" y="64">100</text>
+  </g>
+  <text x="24" y="210" text-anchor="middle" font-size="13" fill="#444" transform="rotate(-90 24 210)">Success rate (%)</text>
+
+  <!-- Bars -->
+  <g>
+    <!-- gemma -->
+    <rect x="106" y="60"  width="45" height="300" fill="#4e79a7"/>
+    <rect x="161" y="60"  width="45" height="300" fill="#59a14f"/>
+    <rect x="216" y="120" width="45" height="240" fill="#e15759"/>
+    <!-- gpt-oss -->
+    <rect x="333" y="60"  width="45" height="300" fill="#4e79a7"/>
+    <rect x="388" y="60"  width="45" height="300" fill="#59a14f"/>
+    <rect x="443" y="120" width="45" height="240" fill="#e15759"/>
+    <!-- nemotron -->
+    <rect x="559" y="60"  width="45" height="300" fill="#4e79a7"/>
+    <rect x="614" y="60"  width="45" height="300" fill="#59a14f"/>
+    <rect x="669" y="280" width="45" height="80"  fill="#e15759"/>
+  </g>
+  <g font-size="11" fill="#333" text-anchor="middle">
+    <text x="128" y="54">100.0</text>
+    <text x="183" y="54">100.0</text>
+    <text x="238" y="114">80.0</text>
+    <text x="355" y="54">100.0</text>
+    <text x="410" y="54">100.0</text>
+    <text x="465" y="114">80.0</text>
+    <text x="581" y="54">100.0</text>
+    <text x="636" y="54">100.0</text>
+    <text x="691" y="274">26.7</text>
+  </g>
+
+  <!-- group labels -->
+  <g font-size="13" fill="#222" text-anchor="middle">
+    <text x="183" y="380">gemma4:31b-cloud</text>
+    <text x="410" y="380">gpt-oss:120b-cloud</text>
+    <text x="636" y="380">nemotron-3-nano:30b-cloud</text>
+  </g>
+
+  <!-- legend -->
+  <g font-size="12" fill="#333">
+    <rect x="210" y="402" width="14" height="14" fill="#4e79a7"/><text x="230" y="414">B0 (naive)</text>
+    <rect x="320" y="402" width="14" height="14" fill="#59a14f"/><text x="340" y="414">B1 (schema)</text>
+    <rect x="445" y="402" width="14" height="14" fill="#e15759"/><text x="465" y="414">B2 (meta-feature)</text>
+  </g>
+  <text x="380" y="450" text-anchor="middle" font-size="11" fill="#666">B0/B1 are 100% across all backends; B2 drops, worst on nemotron-3-nano (26.7%).</text>
+</svg>

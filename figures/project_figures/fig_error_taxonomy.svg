@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 470" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="760" height="470" fill="#ffffff"/>
+  <text x="380" y="26" text-anchor="middle" font-size="17" font-weight="bold" fill="#222">B2 failure categories by backend</text>
+  <text x="380" y="45" text-anchor="middle" font-size="12" fill="#666">B0 and B1 had no failures — 34 of 90 B2 cells failed; 7 are reasoning_unfaithful</text>
+
+  <!-- Y axis + gridlines -->
+  <g stroke="#dddddd" stroke-width="1">
+    <line x1="80" y1="88"  x2="740" y2="88"/>
+    <line x1="80" y1="156" x2="740" y2="156"/>
+    <line x1="80" y1="224" x2="740" y2="224"/>
+    <line x1="80" y1="292" x2="740" y2="292"/>
+  </g>
+  <line x1="80" y1="60" x2="80" y2="360" stroke="#333" stroke-width="1.5"/>
+  <line x1="80" y1="360" x2="740" y2="360" stroke="#333" stroke-width="1.5"/>
+  <g font-size="12" fill="#444" text-anchor="end">
+    <text x="72" y="364">0</text>
+    <text x="72" y="296">5</text>
+    <text x="72" y="228">10</text>
+    <text x="72" y="160">15</text>
+    <text x="72" y="92">20</text>
+  </g>
+  <text x="30" y="210" text-anchor="middle" font-size="13" fill="#444" transform="rotate(-90 30 210)">Failed cells (count)</text>
+
+  <!-- gemma stack (total 6) -->
+  <rect x="138" y="291.8" width="90" height="68.2" fill="#e15759" stroke="#b03a3c" stroke-width="1.5"/>
+  <rect x="138" y="278.2" width="90" height="13.6" fill="#f28e2b"/>
+  <text x="183" y="330" text-anchor="middle" font-size="12" fill="#fff">5</text>
+  <text x="183" y="289" text-anchor="middle" font-size="10" fill="#333">1</text>
+  <text x="183" y="272" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">6</text>
+
+  <!-- gpt-oss stack (total 6) -->
+  <rect x="365" y="305.5" width="90" height="54.5" fill="#76b7b2"/>
+  <rect x="365" y="291.9" width="90" height="13.6" fill="#edc948"/>
+  <rect x="365" y="278.3" width="90" height="13.6" fill="#e15759" stroke="#b03a3c" stroke-width="1.5"/>
+  <text x="410" y="337" text-anchor="middle" font-size="12" fill="#fff">4</text>
+  <text x="410" y="302" text-anchor="middle" font-size="10" fill="#333">1</text>
+  <text x="410" y="289" text-anchor="middle" font-size="10" fill="#fff">1</text>
+  <text x="410" y="272" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">6</text>
+
+  <!-- nemotron stack (total 22) -->
+  <rect x="591" y="100.9" width="90" height="259.1" fill="#bab0ac"/>
+  <rect x="591" y="73.6"  width="90" height="27.3" fill="#9c755f"/>
+  <rect x="591" y="60.0"  width="90" height="13.6" fill="#e15759" stroke="#b03a3c" stroke-width="1.5"/>
+  <text x="636" y="235" text-anchor="middle" font-size="13" fill="#fff">19</text>
+  <text x="636" y="91" text-anchor="middle" font-size="10" fill="#fff">2</text>
+  <text x="636" y="70" text-anchor="middle" font-size="10" fill="#fff">1</text>
+  <text x="636" y="52" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">22</text>
+
+  <!-- group labels -->
+  <g font-size="13" fill="#222" text-anchor="middle">
+    <text x="183" y="380">gemma4:31b-cloud</text>
+    <text x="410" y="380">gpt-oss:120b-cloud</text>
+    <text x="636" y="380">nemotron-3-nano:30b-cloud</text>
+  </g>
+
+  <!-- legend -->
+  <g font-size="11.5" fill="#333">
+    <rect x="95"  y="400" width="13" height="13" fill="#e15759" stroke="#b03a3c"/><text x="112" y="411">reasoning_unfaithful</text>
+    <rect x="250" y="400" width="13" height="13" fill="#f28e2b"/><text x="267" y="411">syntax_error</text>
+    <rect x="370" y="400" width="13" height="13" fill="#76b7b2"/><text x="387" y="411">runtime_other</text>
+    <rect x="500" y="400" width="13" height="13" fill="#edc948"/><text x="517" y="411">api_hallucination</text>
+    <rect x="95"  y="422" width="13" height="13" fill="#bab0ac"/><text x="112" y="433">infrastructure</text>
+    <rect x="250" y="422" width="13" height="13" fill="#9c755f"/><text x="267" y="433">import_error</text>
+  </g>
+  <text x="380" y="458" text-anchor="middle" font-size="11" fill="#666">The 7 reasoning_unfaithful runs (gemma 5, gpt-oss 1, nemotron 1) executed and scored well but were rejected.</text>
+</svg>

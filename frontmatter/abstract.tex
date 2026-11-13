@@ -1,0 +1,63 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Large Language Models (LLMs) are increasingly used as the reasoning and
+code--generating backbone of Automated Machine Learning (AutoML)
+pipelines. In such systems an LLM first produces a natural--language
+or semi--structured plan that describes how a predictive model will be
+built, and then emits executable code that is expected to realise
+exactly that plan. Existing evaluations of these pipelines check that
+the generated program compiles, runs to completion, and reaches an
+acceptable score on some downstream metric. None of these checks
+answers a strictly stronger question: does the emitted code
+mechanically implement the plan for which the LLM was prepared?
+
+This project formulates the above question as a stand--alone
+verification problem that we call \emph{reasoning--code alignment}
+verification. The project has three parts, which the report is
+careful to keep distinct. First, as a \emph{design} contribution, we
+specify a verification framework that lifts an AutoML plan to a set
+of atomic typed claims (a Reasoning Intermediate Representation,
+RIR), lowers the generated Python program to a directed attributed
+multigraph fusing abstract syntax, dataflow and library--level
+semantics (a Program Intermediate Representation, PIR), and maps the
+two so that each claim receives a three--valued verdict
+(\textsc{aligned}, \textsc{misaligned} or \textsc{unverifiable}) and
+the pipeline a four--valued one that adds \textsc{partially aligned},
+with an accompanying AutoML--specific mismatch taxonomy and a
+coverage, weighted--alignment, critical--mismatch and localisation
+metric suite.
+
+Second, as an \emph{implementation} contribution, we build a working
+end--to--end LLM--driven AutoML stack --- five FastAPI microservices
+and two front--ends, a Redis--backed job queue and worker, a
+configurable LLM runner (Ollama or OpenRouter), a sandboxed subprocess
+executor, and a PostgreSQL / MinIO store --- that generates
+scikit--learn pipelines under three prompt
+conditions (B0 naive, B1 schema, B2 meta--feature--guided) and runs a
+first mechanical faithfulness verifier on every B2 run, checking that
+each cited action appears in the generated code and that each cited
+dataset statistic matches the real meta--feature.
+
+Third, as an \emph{empirical} contribution, we evaluate the stack on
+a controlled 270--cell sweep (6 tabular datasets $\times$ 3
+conditions $\times$ 3 model backends $\times$ 5 seeds). The naive and
+schema conditions are completely reliable (100\,\% runnable code),
+whereas the meta--feature condition is markedly less reliable
+(62.2\,\% success) and 5--25$\times$ more expensive in prompt tokens,
+without any statistically significant improvement in predictive score
+(paired Wilcoxon, all $p>0.09$). Crucially, the faithfulness verifier
+flagged seven B2 runs that executed successfully and produced good
+scores but whose stated reasoning did not match their code --- a
+failure mode that execution-- and performance--based checks cannot
+detect. The richer graph--based verifier, the independent pre--code
+reasoning capture and the baseline comparison are designed --- with a
+rule--based verifier prototype on a feature branch --- but not yet
+evaluated at population scale; the report marks these as future work
+rather than completed results.
+
+\medskip
+
+\noindent\textbf{Keywords:} automated machine learning, large language
+models, LLM agents, code generation, program analysis, mechanical
+verification, reasoning--code alignment, reasoning faithfulness.

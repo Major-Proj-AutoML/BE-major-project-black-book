@@ -1,0 +1,481 @@
+\chapter{Proposed Methodology}
+\label{ch:method}
+
+\section{Overview}
+
+The proposed solution is a dedicated verification layer that sits
+between an LLM--driven AutoML planner and the executable Python
+pipeline that the coding agent emits. Instead of judging the
+pipeline only on whether it compiles, runs or reaches a target
+metric, the layer answers a strictly stronger question: does the
+emitted code mechanically implement the plan it was prepared from?
+
+The methodology is organised around five stages:
+
+\begin{enumerate}
+    \item A \textbf{task specification} that captures everything a
+    plan is allowed to assume about the problem.
+    \item A \textbf{Reasoning Intermediate Representation (RIR)}
+    that lowers the plan into atomic typed claims.
+    \item A \textbf{Program Intermediate Representation (PIR)}
+    that lowers the generated code into a directed attributed
+    multigraph covering AST, dataflow and library semantics.
+    \item A \textbf{semantic extraction and mapping} stage that
+    normalises operator calls into a bounded predicate language and
+    constructs claim--to--witness mappings.
+    \item A \textbf{verdict and metrics} stage that assigns
+    three--valued verdicts per claim and reports coverage, weighted
+    alignment, critical mismatch and localisation measures.
+\end{enumerate}
+
+The remainder of this chapter describes each stage, specifies the
+alignment relation and metrics formally, presents the mismatch
+taxonomy, and lists the baselines against which the verifier is
+compared.
+
+\begin{quote}
+\textbf{Scope of this chapter.} This chapter specifies the
+\emph{proposed} framework in full. It is a design, not a report of
+delivered software. Two implementation levels exist and are detailed
+in Chapter~\ref{ch:impl}. On the current \texttt{main} branch, a
+first faithfulness verifier checks operation \emph{presence} and
+meta--feature \emph{value grounding} with a boolean verdict. On a
+separate prototype branch (\texttt{feat/rir-pir-verifier}, not merged
+into \texttt{main}), a stdlib AST--based Program IR and a rule engine
+additionally implement existence, parameter, column and ordering
+checks, three--valued per--claim verdicts and four--valued
+criticality--gated pipeline aggregation over a partial mismatch
+taxonomy. What remains designed but unbuilt is the graph--based
+(multigraph) Program IR, the set--valued mapper, semantic and
+behavioural equivalence, the full taxonomy of
+Table~\ref{tab:taxonomy} and the at--scale metric and baseline
+evaluation. The reader should treat every mechanism below as proposed
+unless Chapter~\ref{ch:impl} marks it implemented.
+\end{quote}
+
+\section{System Requirements}
+
+\subsection{Hardware Requirements}
+
+The verifier itself is CPU--only and is comfortable on commodity
+developer hardware. The LLM backends used to generate plans and code
+are the main hardware driver.
+
+\begin{itemize}
+    \item A 64--bit workstation or server with at least 16~GB of RAM
+    and an SSD for sandboxed execution and corpus storage.
+    \item An LLM backend. The reported experiments used hosted
+    \texttt{Ollama} cloud models (for example a 120B model), so no
+    local GPU was required; running a model locally instead needs a
+    CUDA--capable GPU with enough memory for that model.
+    \item Optional access to a Redis--capable host for job
+    orchestration when the pipeline is deployed as a service.
+\end{itemize}
+
+\subsection{Software Requirements}
+
+\begin{itemize}
+    \item Python 3.10 or later, with
+    \texttt{scikit--learn}~\cite{sklearn}, \texttt{pandas},
+    \texttt{numpy} and \texttt{pydantic}. The implemented verifier
+    uses only the standard--library \texttt{ast} module; the proposed
+    graph--based Program IR additionally requires \texttt{networkx}
+    and \texttt{libcst}, which are not yet a project dependency.
+    \item \texttt{FastAPI} (with \texttt{uvicorn}) and
+    \texttt{rq}/\texttt{Redis} for the HTTP services, job queueing and
+    run--worker.
+    \item An LLM runner with a configurable backend (the reference
+    deployment supports \texttt{Ollama} and \texttt{OpenRouter}) so
+    that reasoning and coding models can be swapped without changing
+    the rest of the pipeline.
+    \item A sandbox for running untrusted generated code
+    (containerised Python with resource and filesystem limits).
+    \item LaTeX, for reproducing this report and generated figures.
+\end{itemize}
+
+\section{Proposed Approach}
+
+The verifier consumes four objects: a \emph{task specification} $T$,
+a \emph{reasoning artifact} $R$, a \emph{code artifact} $C$ and an
+\emph{execution trace} $E$. It produces a per--claim verdict table,
+a mismatch summary and a set of aggregate metrics.
+
+\subsection{Task Specification}
+
+The input records the dataset reference, the target column, the task
+type (binary / multiclass / regression), the allowed or prohibited
+models, the preprocessing constraints, the evaluation metric, the
+split policy, the resource limits and the required outputs. Each
+field receives a provenance tag --- \texttt{USER},
+\texttt{INFERRED} or \texttt{DEFAULT} --- so that an unstated agent
+assumption is never silently treated as a user requirement.
+
+\subsection{Reasoning Intermediate Representation (RIR)}
+
+Unrestricted prose cannot be used as a mechanical specification. The
+planner (or an extraction step applied to free--form reasoning)
+emits a readable rationale together with a structured RIR. Each
+atomic claim $r_i$ has the form
+\[
+r_i = \langle id, o, s, a, \theta, d, q, w, \pi \rangle ,
+\]
+where $o$ is an operation class, $s$ is a scope, $a$ is an operator
+family, $\theta$ are parameters, $d$ is an ordering or dependency
+predicate, $q$ is a qualifier, $w$ is a criticality and $\pi$ is
+provenance. For example, a claim can be written as
+\begin{verbatim}
+R2: TRANSFORM(scope=numeric,
+              family=standardization,
+              fit=train_only,
+              before=model, weight=2).
+\end{verbatim}
+Claims cover loading, splitting, imputation, encoding, scaling,
+feature selection, dimensionality reduction, model choice, fitting,
+prediction, evaluation and constraints. Meaningful but
+non--operational claims are retained as \texttt{NONEXECUTABLE} and
+are not counted as aligned.
+
+Free--form plans require a separate extraction step. To avoid
+circular evaluation, extraction errors are measured against
+human--annotated claims; direct structured emission is the primary
+condition and free--form extraction is a harder comparison.
+
+\subsection{Code Generation and Program IR}
+
+The coding agent receives the task specification and the plan, and
+emits source code without verifier labels. Source, environment, seed
+and transcript are versioned, and failed programs are preserved as
+outcomes.
+
+Python is parsed into an AST and lowered into a directed attributed
+multigraph
+\[
+\mathcal{P} = (V_P, E_D, E_C, \lambda, \eta),
+\]
+where $V_P$ contains data objects, transforms, estimators, splits,
+metrics and predicates; $E_D$ records dataflow; $E_C$ records
+control or calls; $\lambda$ maps nodes to normalised semantics; and
+$\eta$ stores arguments, locations and types.
+
+An AST identifies syntax but inadequately represents pipeline order.
+A runtime trace observes only one path. The combined representation
+uses static analysis for coverage and optional instrumentation to
+resolve dynamic dispatch, fitted columns and values. Library
+adapters normalise \texttt{Pipeline},
+\texttt{ColumnTransformer}, estimators, scoring strings and custom
+transformers.
+
+\section{Algorithms / Models}
+
+\subsection{Semantic Extraction, Mapping and Verdicts}
+
+Calls are normalised into predicates such as
+\begin{verbatim}
+    IMPUTE(num, strategy=median),
+    SCALE(num, semantics=zscore, fit=train),
+    MODEL(family=logistic, balanced=true),
+    EVALUATE(metric=f1, average=macro).
+\end{verbatim}
+Bodies or trusted summaries resolve aliases and wrappers. Constant
+propagation is conservative; unknown values are left symbolic.
+Dataflow provenance enables leakage checks --- for example, whether a
+scaler was fitted before the train/validation split.
+
+For each claim, the mapper constructs program witnesses from the
+operation type, scope, dataflow neighbourhood and semantic family.
+The rules then check presence, operator semantics, parameters, order,
+dependency, target and metric constraints. Each report records the
+claim, the expected predicate, the observed evidence, the source span,
+the verdict, the category and the severity.
+
+Verdicts are reported at two levels. Each individual claim receives a
+\emph{three--valued} verdict --- \textsc{aligned}, \textsc{misaligned}
+or \textsc{unverifiable} --- the last when there is not enough
+evidence to decide it. The claim verdicts are then aggregated, with
+criticality gating, into a \emph{four--valued} pipeline verdict:
+\begin{itemize}
+    \item \textsc{Aligned} --- all decided claims align and no
+    contradiction is present.
+    \item \textsc{Partially aligned} --- only non--critical claims
+    mismatch or remain unaccounted for.
+    \item \textsc{Misaligned} --- a critical claim fails or a
+    contradiction is present.
+    \item \textsc{Unverifiable} --- there is not enough evidence to
+    decide the pipeline either way.
+\end{itemize}
+Abstinence (\textsc{Unverifiable}) prevents uncertainty from turning
+into false certainty.
+
+\subsection{Alignment Relation}
+
+Let $\mathcal{R} = \{r_1, \dots, r_n\}$ be the set of plan claims and
+$V_P = \{p_1, \dots, p_m\}$ the set of program nodes. The mapper is
+set--valued:
+\[
+M : \mathcal{R} \to 2^{V_P} \cup \{\emptyset\}.
+\]
+A claim can require several nodes; leakage--safe scaling, for
+example, requires a split, a scaler fitted on the training branch and
+reuse on validation data.
+
+The per--claim relation is three--valued,
+\[
+A(r_i, M(r_i)) \in \{1, 0, \bot\},
+\]
+where $1$ denotes agreement, $0$ an established mismatch and $\bot$
+insufficient evidence. It combines the applicable predicates,
+\[
+A_i = A_i^{\mathrm{pres}} \wedge A_i^{\mathrm{sem}} \wedge
+A_i^{\mathrm{param}} \wedge A_i^{\mathrm{ord}} \wedge
+A_i^{\mathrm{dep}} .
+\]
+A three--valued conjunction returns $0$ if any required predicate is
+false, $1$ if all are true, and $\bot$ otherwise.
+
+\section{Evaluation Metrics}
+
+Let $v_i = 1$ if claim $i$ is decided, $a_i = 1$ only for a decided
+match, and $w_i > 0$ be a criticality weight assigned per claim type
+(for example, a leakage--relevant ordering claim carries more weight
+than an optional feature--selection claim).
+
+\begin{itemize}
+    \item \textbf{Claim coverage.}
+    \[
+    C_{\mathrm{claim}} = \frac{1}{n}\sum_{i=1}^{n} v_i.
+    \]
+    \item \textbf{Weighted semantic alignment.}
+    \[
+    S_{\mathrm{align}} = \frac{\sum_i w_i v_i a_i}{\sum_i w_i v_i}
+    \]
+    when the denominator is non--zero. Coverage must accompany the
+    score.
+    \item \textbf{Critical mismatch rate.} Let $K$ be the set of
+    critical claims:
+    \[
+    \mathrm{CMR} = \frac{\sum_{i\in K}\mathbf{1}[A_i = 0]}{|K|}.
+    \]
+    \item \textbf{Localisation} is evaluated by category macro--F1
+    and source--span intersection--over--union. False--alignment and
+    false--misalignment rates are reported separately.
+\end{itemize}
+
+Coverage is reported alongside the alignment score so that a high
+value cannot be achieved by labelling most claims
+\textsc{unverifiable} and declaring the handful of remaining claims
+aligned.
+
+\subsection{Semantic Equivalence}
+
+Alignment cannot be decided by string equality. The design uses four
+levels of evidence: \emph{lexical} (which symbols are candidate
+matches), \emph{structural} (AST and graph patterns, or an operator's
+role in the program), \emph{semantic} (the operator's meaning, taken
+from a trusted summary or an equivalent rewrite), and
+\emph{behavioural} (agreement on a bounded set of probe inputs over a
+declared input domain). Lexical evidence alone cannot certify a claim,
+and behavioural agreement over probes does not prove universal
+semantic equivalence. Without a trusted contract, a custom function
+that relies on reflection, external state or undecidable dispatch is
+labelled $\bot$ (unverifiable).
+
+For instance, \texttt{StandardScaler} and a custom $(x - \mu)/\sigma$
+may match if such code fits $\mu$ and $\sigma$ on training data,
+uses the same variance and zero--variance conventions, and transforms
+only the intended columns. Addition and subtraction observed on their
+own are not enough.
+
+\subsection{Worked Example}
+\label{sec:worked-example}
+
+To make the representations concrete, consider a single
+preprocessing decision on the Titanic dataset. The LLM is given the
+dataset meta--features and emits the natural--language reasoning:
+
+\begin{quote}\itshape
+``The \texttt{Fare} column is heavily skewed with many outliers
+(outlier ratio $0.128 > 0.05$), so I scale it with
+\texttt{RobustScaler} rather than \texttt{StandardScaler}.''
+\end{quote}
+
+\noindent\textbf{(1) RIR claim.} This lifts to one atomic typed
+claim:
+\begin{verbatim}
+C1: TRANSFORM(op=scale, scope={Fare},
+              family=robust_scaling,
+              meta_feature=
+                distributional.outlier_ratio_per_numeric.Fare,
+              observed_value=0.128, threshold=0.05,
+              action=RobustScaler, weight=medium).
+\end{verbatim}
+
+\noindent\textbf{(2) Generated code.} The coding step emits, among
+other lines:
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import RobustScaler
+from sklearn.compose import ColumnTransformer
+pre = ColumnTransformer([("num", RobustScaler(), ["Fare"])])
+\end{lstlisting}
+
+\noindent\textbf{(3) PIR.} The program lowers to nodes including a
+call \texttt{RobustScaler()} imported from
+\texttt{sklearn.preprocessing}, wired into a
+\texttt{ColumnTransformer} whose column literal set is
+\texttt{\{Fare\}}.
+
+\noindent\textbf{(4) Mapping and verdict.} The claim \texttt{C1} maps
+to the \texttt{RobustScaler} node. The verifier checks: the cited
+action \texttt{RobustScaler} is present in the code
+($A^{\mathrm{pres}}=1$); the cited
+\texttt{observed\_value}~$0.128$ equals the real meta--feature within
+tolerance ($A^{\mathrm{sem}}$ value--grounding~$=1$); and, in the
+full design, the applied column \texttt{Fare} and the fit--after--split
+ordering also hold. The verdict is \textsc{aligned}.
+
+\noindent\textbf{(5) The misalignment case.} Had the code instead
+used \texttt{StandardScaler} while the trace still claimed
+\texttt{RobustScaler}, then $A^{\mathrm{pres}}=0$ and the verdict is
+\textsc{misaligned} --- even though the pipeline compiles, runs and
+may reach an identical score. This is precisely the failure that
+execution-- and performance--based checks cannot see, and it is the
+check that the implemented prototype (Chapter~\ref{ch:impl}) already
+performs. Figure~\ref{fig:rirpir} illustrates the full mapping.
+
+\begin{figure}[H]
+    \centering
+    \miroplaceholder{figures/project_figures/rir_pir_mapping.png}{%
+    RIR--to--PIR mapping for the worked example: the natural--language
+    reasoning on the left, its atomic RIR claim, the generated code
+    and its PIR (AST call node + column literals + import) on the
+    right, with the claim--to--witness arrows and the resulting
+    per--check verdicts (presence / value / column / order).}
+    \caption{Worked RIR--PIR claim--to--code mapping for a single
+    \texttt{RobustScaler} decision on the \texttt{Fare} column.}
+    \label{fig:rirpir}
+\end{figure}
+
+\section{Mismatch Taxonomy}
+
+The proposed taxonomy of reasoning--code misalignment is given in
+Table~\ref{tab:taxonomy}. It is defined so that the mechanical
+condition of each category can be checked from RIR and PIR evidence,
+and so that each category can be weighted by severity. Secondary
+tags are permitted; placing a scaler before a split is both an
+ordering and a data--handling mismatch.
+
+\begin{table}[H]
+\centering
+\caption{Proposed taxonomy of AutoML reasoning--code misalignment.}
+\label{tab:taxonomy}
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{3.3cm} p{4cm} p{4.5cm} p{2.2cm}}
+\toprule
+\textbf{Category} & \textbf{Mechanical condition} &
+\textbf{Example} & \textbf{Severity} \\
+\midrule
+Missing implementation & No reachable witness &
+Feature selection planned but absent & Medium--High \\
+Contradictory implementation & Observed predicate conflicts &
+Preserve rows planned; code drops missing rows & High \\
+Model mismatch & Estimator family incompatible &
+Logistic model planned; forest used & High \\
+Parameter mismatch & Operator matches but value differs &
+Five folds stated; code uses three & Medium--High \\
+Pipeline--order mismatch & Precedence or fit scope violated &
+Scaling fitted before split & High \\
+Evaluation mismatch & Metric differs &
+Macro F1 stated; accuracy used & High \\
+Data--handling mismatch & Columns, target, split or sampling differs
+& Stratification absent & High \\
+Constraint mismatch & Resource or admissibility rule violated &
+Sparse model required; ensemble used & Medium--High \\
+Unsupported claim & No operational definition &
+Use a stable model & Unverifiable \\
+Dead reasoning & Matching node is off effective path &
+Selector constructed but unused & Medium \\
+Extraneous operation & Consequential unstated step added &
+Target--dependent preprocessing added & Contextual \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Baselines}
+
+Five systems are compared.
+
+\begin{enumerate}
+    \item \textbf{Execution--only}: aligned if execution succeeds.
+    \item \textbf{Performance--only}: aligned if execution completes
+    and the requested performance threshold is met.
+    \item \textbf{LLM judge}: a separate model assesses alignment by
+    reasoning over the plan and code without access to program
+    analysis tools.
+    \item \textbf{Keyword/API matching}: claims are considered
+    aligned when they match Python method names and metric strings.
+    \item \textbf{Mechanical verifier}: performs full RIR--PIR
+    mapping with semantic normalisation, program--graph constraints,
+    and uncertainty estimation.
+\end{enumerate}
+
+Table~\ref{tab:baselines} summarises what each baseline is capable of
+doing.
+
+\begin{table}[H]
+\centering
+\caption{Baseline capabilities.}
+\label{tab:baselines}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Method} & \textbf{Runs} & \textbf{Plan} & \textbf{Graph} &
+\textbf{Localizes} \\
+\midrule
+Execution--only & \checkmark & -- & -- & -- \\
+Performance--only & \checkmark & Part. & -- & -- \\
+LLM judge & Opt. & \checkmark & -- & Text \\
+Keyword match & -- & \checkmark & -- & Token \\
+Mechanical verifier & Opt. & \checkmark & \checkmark & Claim \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Data Collection and Preprocessing}
+
+Two corpora are needed.
+
+\textbf{Natural corpus.} Unaltered LLM plans and code. Claims are
+extracted and program evidence is mapped by two annotators
+independently; a third has the final say when disagreements occur.
+Each annotator estimates alignment, category, severity and source
+span. Reported numbers include (1) agreement per claim extraction,
+(2) ternary labels and (3) taxonomy classes.
+
+\textbf{Seeded--mutation corpus.} Well--aligned pipelines are the
+basis. A controlled mutation deletes an operator, swaps a model or a
+metric, changes a parameter, factors out transforms, alters the
+split policy, disconnects one step from another and violates any
+constraints. Mutations maintain syntax, and some subset must
+guarantee successful execution. This is a direct test of the
+motivating case. Negative controls consist of equivalent
+refactorings and aliases, wrappers, and semantically equivalent
+implementations. Mutation templates must retain names and comments
+(if possible) to prevent keyword baselines from taking advantage of
+simple cues; the point is that when code is mutated, only a semantic
+change is introduced where humans intended, and nothing else.
+
+\section{Summary}
+
+The methodology formalises reasoning--code alignment as a
+set--valued mapping from atomic typed claims (RIR) to program
+witnesses in a directed attributed multigraph (PIR), with a
+three--valued verdict space that includes a dedicated
+\textsc{unverifiable} escape. A bounded predicate language
+normalises scikit--learn calls, an AutoML--specific taxonomy
+describes mismatch categories, and a metric suite (coverage,
+weighted alignment, critical mismatch and localisation) summarises
+the result in a way that cannot be inflated by abstention. Four
+baselines, including a strong LLM--judge, are specified so that the
+added value of the mechanical check can be measured rather than
+assumed. The next chapter presents the system that realises this
+methodology end to end.
