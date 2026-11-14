@@ -38,6 +38,17 @@ produces one \texttt{run\_results} row.
     runnable, verified pipeline is produced within three attempts.
 \end{itemize}
 
+Four outcomes are tracked separately for each cell and are not
+conflated below: (i) \emph{execution} --- did the generated pipeline
+run and produce a predictive score; (ii) \emph{predictive score} ---
+the \texttt{balanced\_accuracy} achieved when it ran; (iii)
+\emph{verifier outcome} --- for B2 only, whether the reasoning trace
+passed the faithfulness check (B0 and B1 carry no trace, so the
+verifier is \emph{not applicable}); and (iv) \emph{verified yield} ---
+runs that both executed and passed the faithfulness check. A B2 cell
+can therefore execute and produce a score yet still be an unverified
+outcome if the faithfulness check rejects it.
+
 The run completed in 5\,h\,17\,m. A leakage guard (any
 \texttt{balanced\_accuracy} $\geq 0.995$ on a classification task)
 fired on \textbf{zero} cells. All artefacts (generated code, traces,
@@ -81,38 +92,73 @@ collapsed over all datasets, backends and seeds (90 cells each).
 
 \begin{table}[H]
 \centering
-\caption{Per--condition results over all 90 cells each. ``Mean score''
-and ``Mean iters'' are over successful runs only.}
+\caption{Per--condition results over all 90 cells each. \emph{Verified
+yield} = runs that were runnable \emph{and} passed the B2 faithfulness
+check; \emph{raw execution} = runs that produced a pipeline and a
+score. B0/B1 have no faithfulness gate, so the two coincide and the
+verifier is not applicable. Mean score is over executed runs; mean
+iters over successful runs.}
 \label{tab:percond}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{l r r r r}
 \toprule
-\textbf{Condition} & \textbf{Success} & \textbf{Success \%} &
+\textbf{Condition} & \textbf{Verified yield} & \textbf{Raw execution} &
 \textbf{Mean score} & \textbf{Mean iters} \\
 \midrule
-B0 (naive)        & 90/90 & 100.0\,\% & 0.8432 & 1.01 \\
-B1 (schema)       & 90/90 & 100.0\,\% & 0.8468 & 1.06 \\
-B2 (meta-feature) & 56/90 & \textbf{62.2\,\%} & 0.8549$^\ast$ & 1.41 \\
+B0 (naive)        & 90/90 (100.0\,\%) & 90/90 (100.0\,\%) & 0.8432 & 1.01 \\
+B1 (schema)       & 90/90 (100.0\,\%) & 90/90 (100.0\,\%) & 0.8468 & 1.06 \\
+B2 (meta-feature) & 56/90 (\textbf{62.2\,\%}) & 63/90 (\textbf{70.0\,\%}) & 0.8542$^\ast$ & 1.41 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent$^\ast$ B2's marginally higher mean is \emph{survivorship
-bias}: only the 56 cells it completes contribute, while its 34
-failures (often the harder cells) are excluded. The paired test in
-Section~\ref{sec:rq4} is the valid comparison.
+\noindent$^\ast$ B2's mean is over its 63 executed runs (the 56
+verified plus the 7 that executed but failed the faithfulness check);
+it is still conditional on execution, since the 27 cells that produced
+no pipeline --- often the harder ones --- are necessarily excluded. The
+paired test in Section~\ref{sec:rq4} is the valid like--for--like
+comparison.
 
-The breakdown by backend (Table~\ref{tab:permodel}) shows the effect
-is uniform and that B2 is far more expensive. B0 and B1 are perfectly
-reliable across all three backends; B2 drops every backend and is
-catastrophic for the smallest (nemotron--nano, 26.7\,\%), whose
-run--away completion length (26k tokens) trips upstream limits.
+Table~\ref{tab:yield} separates these outcomes per backend.
 
 \begin{table}[H]
 \centering
-\caption{Per--backend $\times$ condition: success, iterations
-(averaged over all 30 cells, including failed attempts) and token
-cost (averages).}
+\caption{B2 outcomes per backend (30 cells each): verified successes,
+runs that executed and scored but failed the faithfulness check, other
+failures, and the resulting raw execution count (raw execution =
+verified $+$ executed-but-unfaithful).}
+\label{tab:yield}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{l r r p{4.3cm} r}
+\toprule
+\textbf{Backend} & \textbf{Ver.} & \textbf{Exec.\ unfaithful} &
+\textbf{Other failures} & \textbf{Raw exec.} \\
+\midrule
+gemma4:31b-cloud          & 24 & 5 & 1 syntax\_error & 29/30 \\
+gpt-oss:120b-cloud        & 24 & 1 & 4 runtime\_other, 1 api\_hallucination & 25/30 \\
+nemotron-3-nano:30b-cloud & 8  & 1 & 19 infrastructure, 2 import\_error & 9/30 \\
+\midrule
+\textbf{Total}            & \textbf{56} & \textbf{7} & \textbf{27} & \textbf{63/90} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The breakdown by backend (Table~\ref{tab:permodel}) shows the effect
+is uniform and that B2 is far more expensive. B0 and B1 are perfectly
+reliable across all three backends; B2's verified yield drops on every
+backend and is lowest for the smallest model (nemotron--nano: 26.7\,\%
+verified, 30.0\,\% raw execution), whose run--away completion length
+(26k tokens) trips upstream limits.
+
+\begin{table}[H]
+\centering
+\caption{Per--backend $\times$ condition: verified success
+(\texttt{ok} = verified yield; raw execution is in
+Table~\ref{tab:yield}), iterations (averaged over all 30 cells,
+including failed attempts) and mean token counts (over the cells that
+recorded usage --- 30 per row except nemotron--nano B2, where only 14
+of 30 did, the rest failing before a usage record was written).}
 \label{tab:permodel}
 \scriptsize
 \renewcommand{\arraystretch}{1.25}
@@ -145,13 +191,17 @@ nemotron-3-nano:30b-cloud & B2 & 8  & \textbf{26.7} & 1.33 & 7373 & \textbf{2624
 \end{figure}
 
 Table~\ref{tab:perdataset} reports mean test score per dataset and
-condition. On every dataset the three conditions land within $\pm
-0.02$ of each other; meta--features do not shift pipeline quality.
+condition over the runs that executed. The conditions differ by at
+most about $0.03$ on any dataset (the largest single gap is
+$\approx 0.025$, on Telco and Titanic); meta--features do not
+materially shift pipeline quality.
 
 \begin{table}[H]
 \centering
 \caption{Mean \texttt{balanced\_accuracy} per dataset $\times$
-condition (successful runs; ``ok'' = successes of 15).}
+condition over \emph{executed} runs; \texttt{n} is the number that
+executed out of 15 (for B2 this includes runs that produced a score
+but failed the faithfulness check).}
 \label{tab:perdataset}
 \scriptsize
 \renewcommand{\arraystretch}{1.25}
@@ -159,14 +209,14 @@ condition (successful runs; ``ok'' = successes of 15).}
 \toprule
 & & \multicolumn{2}{c|}{\textbf{B0}} & \multicolumn{2}{c|}{\textbf{B1}}
 & \multicolumn{2}{c}{\textbf{B2}} \\
-\textbf{Dataset} & \textbf{rows} & ok & score & ok & score & ok & score \\
+\textbf{Dataset} & \textbf{rows} & n & score & n & score & n & score \\
 \midrule
-wdbc        & 569  & 15 & 0.9618 & 15 & 0.9673 & 12 & 0.9707 \\
-breast-w    & 699  & 15 & 0.9524 & 15 & 0.9492 & 10 & 0.9554 \\
-diabetes    & 768  & 15 & 0.7215 & 15 & 0.7172 & 11 & 0.7126 \\
+wdbc        & 569  & 15 & 0.9618 & 15 & 0.9673 & 13 & 0.9706 \\
+breast-w    & 699  & 15 & 0.9524 & 15 & 0.9492 & 11 & 0.9542 \\
+diabetes    & 768  & 15 & 0.7215 & 15 & 0.7172 & 12 & 0.7130 \\
 Titanic     & 891  & 15 & 0.7874 & 15 & 0.7898 & 6  & 0.7670 \\
-spambase    & 4601 & 15 & 0.9352 & 15 & 0.9313 & 10 & 0.9350 \\
-Telco churn & 7043 & 15 & 0.7009 & 15 & 0.7259 & 7  & 0.6974 \\
+spambase    & 4601 & 15 & 0.9352 & 15 & 0.9313 & 12 & 0.9348 \\
+Telco churn & 7043 & 15 & 0.7009 & 15 & 0.7259 & 9  & 0.7028 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -177,10 +227,13 @@ Telco churn & 7043 & 15 & 0.7009 & 15 & 0.7259 & 7  & 0.6974 \\
 
 The implemented B2 pipeline lifts each plan into a structured
 reasoning trace (a list of typed \texttt{Decision} claims) that is
-\emph{mechanically} comparable with the generated code. All 90 B2
-cells produced a parseable trace that the verifier consumed without a
-human in the loop. This is preliminary support for RQ1 \emph{at the
-level of the implemented representation} (presence + value grounding);
+\emph{mechanically} comparable with the generated code. The 63 B2 runs
+that executed produced a parseable trace that the verifier consumed
+without a human in the loop; the 27 that failed before producing any
+output (syntax, import, runtime, API or infrastructure errors) stored a
+null trace and were not verifiable. This is preliminary support for RQ1
+\emph{at the level of the implemented representation} (presence + value
+grounding);
 the richer graph--based PIR of Chapter~\ref{ch:method} remains future
 work, so full coverage of ordering and dataflow claims is not yet
 demonstrated.
@@ -199,6 +252,16 @@ if small, confirmation of \textbf{H1} (execution success does not
 imply alignment) and preliminary support for \textbf{H2} (the
 mechanical check discriminates where execution cannot).
 
+These seven are counted among the 34 unsuccessful B2 cells, not among
+the 56 successes: a B2 cell is scored \emph{successful} only if it
+produces a runnable pipeline \emph{and} passes the faithfulness check.
+What sets the seven apart from the other 27 failures (syntax, import,
+runtime, API and infrastructure errors) is that they \emph{ran and
+produced a good score} --- which is exactly why an execution-- or
+performance--only check would have accepted them. Counting them as
+executions, raw B2 execution is $63/90 = 70.0\%$, of which the verifier
+accepted $56$ ($62.2\%$ verified yield).
+
 \subsection{RQ3 --- Categories}
 
 Only B2 produced failures; B0 and B1 were 100\,\% runnable. The
@@ -212,7 +275,10 @@ cases), but its sub--categorisation is future work.
 
 \begin{table}[H]
 \centering
-\caption{Failure categories (B2 only; B0 and B1 had none).}
+\caption{Failure categories for the 34 B2 cells that did not meet the
+end--to--end success definition (B0/B1 had none).
+\texttt{reasoning\_unfaithful} marks a run that executed and scored but
+was rejected by the verifier, not an execution failure.}
 \label{tab:errors}
 \small
 \renewcommand{\arraystretch}{1.2}
@@ -256,28 +322,35 @@ was not stratified by operation count.
 
 \textbf{Predictive score.} A paired Wilcoxon signed--rank test on
 \texttt{test\_score}, matched on each \((\text{dataset}, \text{seed},
-\text{backend})\) cell where both conditions succeeded
-(Table~\ref{tab:wilcoxon}), shows \textbf{no significant difference}
-for any pair (Bonferroni--adjusted $\alpha = 0.0167$). Meta--feature
-prompting does not improve predictive quality over naive or schema
-prompting.
+\text{backend})\) cell where both conditions produced a score --- so
+B2 contributes every executed run, whether or not the verifier
+accepted it (Table~\ref{tab:wilcoxon}) --- shows \textbf{no
+statistically significant difference} for any pair
+(Bonferroni--adjusted $\alpha = 0.0167$). Meta--feature prompting does
+not improve predictive quality over naive or schema prompting at this
+sample size.
 
 \begin{table}[H]
 \centering
-\caption{Paired Wilcoxon signed--rank on test score (both conditions
-succeeded on the matched cell). Median $\Delta$ is the second
-condition minus the first.}
+\caption{Paired Wilcoxon signed--rank on test score, over matched
+cells where both conditions produced a score. \textbf{n} is the number of
+\emph{discordant} pairs (those with a non--zero score difference) used
+by the signed--rank test; the remaining matched pairs scored
+identically. Median~$\Delta$ (second condition minus first) is taken
+over those discordant pairs. \textbf{r}~$=|z|/\sqrt{n}$ is the rank
+effect size; all three are small ($\leq 0.21$). B2 includes every run
+that produced a score, whether or not the verifier accepted it.}
 \label{tab:wilcoxon}
 \small
 \renewcommand{\arraystretch}{1.25}
-\begin{tabular}{l r r r r l}
+\begin{tabular}{l r r r r r l}
 \toprule
 \textbf{Pair} & \textbf{n} & \textbf{median $\Delta$} & \textbf{z} &
-\textbf{p} & \textbf{verdict} \\
+\textbf{p} & \textbf{r} & \textbf{verdict} \\
 \midrule
-B0 vs B1 & 64 & $+0.0044$ & $-1.669$ & 0.095 & n.s. \\
-B0 vs B2 & 54 & $-0.0022$ & $-0.637$ & 0.524 & n.s. \\
-B1 vs B2 & 51 & $+0.0043$ & $-0.356$ & 0.722 & n.s. \\
+B0 vs B1 & 64 & $+0.0044$ & $-1.669$ & 0.095 & 0.21 & n.s. \\
+B0 vs B2 & 60 & $+0.0000$ & $-0.214$ & 0.831 & 0.03 & n.s. \\
+B1 vs B2 & 58 & $+0.0007$ & $-0.159$ & 0.874 & 0.02 & n.s. \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -312,7 +385,7 @@ pending at span level.
 \label{tab:hyp}
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabular}{l p{8.5cm} l}
+\begin{tabular}{l p{6.8cm} p{4cm}}
 \toprule
 \textbf{H} & \textbf{Statement} & \textbf{Status} \\
 \midrule
@@ -374,12 +447,16 @@ removed as unsupported.
 \textbf{A useful negative result.} Across three backends and six
 datasets, injecting meta--features and decision rules into the prompt
 (B2) did not improve predictive score (Table~\ref{tab:wilcoxon}) and
-markedly reduced reliability (100\,\% $\rightarrow$ 62\,\%) at
-5--25$\times$ the prompt--token cost. For this family of models and
+markedly reduced reliability (100\,\% $\rightarrow$ 62.2\,\% verified
+yield, 70.0\,\% raw execution) at roughly 5--27$\times$ the
+prompt--token cost (about 5--8$\times$ over B1 and 18--27$\times$ over
+B0). For this family of models and
 tabular tasks, the schema signal (B1) already captures what helps; the
-extra meta--feature payload mostly adds failure surface. This is a
-clean, reportable finding, not a disappointment --- it tells a
-practitioner they can stop paying the meta--feature cost.
+extra meta--feature payload appears mainly to add failure surface
+rather than useful signal. This is a clean, reportable observation,
+not a disappointment --- it tells a practitioner they can stop paying
+the meta--feature cost. That the larger prompt \emph{causes} the extra
+failures is a plausible reading, not something this design isolates.
 
 \textbf{The verifier earns its place.} The same B2 machinery that
 hurts reliability is what makes faithfulness \emph{checkable}. The
@@ -407,7 +484,13 @@ the best possible prompt in each class; a different B2 wording could
 behave differently. The faithfulness verifier checks presence and
 value grounding only --- it does not yet check parameters, ordering or
 columns, so ``faithful'' here is a necessary, not sufficient,
-condition for full alignment.
+condition for full alignment. Moreover, the presence check is satisfied
+whenever the cited action \emph{symbol} appears anywhere in the code
+--- including in an \texttt{import} that is never instantiated or
+applied --- so it does not prove the operation was actually used; the
+boolean verdict can admit false positives, and a \textsc{pass} means
+only that the implemented checks passed, not that the pipeline is
+semantically faithful.
 
 \textbf{Internal validity.} The implemented verifier treats an
 \emph{uncheckable} value as not--contradicted, so a decision citing no
@@ -430,8 +513,9 @@ run.
 
 On a real 270--cell sweep, the naive and schema prompt conditions were
 perfectly reliable while the meta--feature condition was markedly less
-reliable and far more expensive without improving predictive score
-(paired Wilcoxon, all $p>0.09$). The implemented mechanical verifier
+reliable (62.2\,\% verified yield, 70.0\,\% raw execution) and far more
+expensive (roughly 5--27$\times$ the prompt tokens) without improving
+predictive score (paired Wilcoxon over executed runs, all $p>0.09$). The implemented mechanical verifier
 flagged seven pipelines that executed and scored well but whose
 reasoning did not match their code --- supporting H1 and giving
 preliminary support to H2, the project's core hypotheses. The

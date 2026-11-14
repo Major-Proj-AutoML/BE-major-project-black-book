@@ -12,14 +12,35 @@ supervision and verifying its alignment with the plan, and to
 answering the five research questions over the accumulated run
 records.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=\textwidth]{figures/project_figures/architecture.png}
-    \caption{End--to--end execution and evaluation pipeline across the
-    three tiers. The diagram should show the five FastAPI services
-    (data, meta--features, generation, analysis and gateway), the two
-    front--ends, the Redis Queue worker, the LLM runner, the
-    sandboxed executor, and the PostgreSQL / MinIO stores.}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=0.84\textwidth]{figures/project_figures/architecture.png}
+        \caption{Runtime flow of a single run: upload and meta--feature
+        extraction, sweep enqueue, the \texttt{run\_cell} worker (prompt
+        build, \texttt{call\_llm}, bounded--subprocess execution, B2
+        verification), persistence to \texttt{run\_results}, and the
+        read--only RQ1--RQ5 analysis.}
+        \label{fig:architecture-flow}
+    \end{subfigure}
+
+    \vspace{0.3cm}
+
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=0.84\textwidth]{figures/project_figures/BB_fig_4.1.2.png}
+        \caption{Component and deployment view: the Streamlit front--end
+        and clients reach the five FastAPI services through the gateway
+        (synchronous HTTP); the generation service enqueues jobs on Redis
+        for the worker, which drives the Ollama runner and the bounded
+        subprocess executor (asynchronous); PostgreSQL and the local
+        filesystem hold the results and artefacts. MinIO object storage is
+        integrated in the code but was disabled for the reported runs.}
+        \label{fig:architecture-components}
+    \end{subfigure}
+    \caption{System architecture: (a) the runtime flow of one run, and
+    (b) the deployed components and their connections.}
     \label{fig:architecture}
 \end{figure}
 
@@ -44,12 +65,13 @@ The run and verification tier is driven by a \textbf{Redis Queue (RQ)
 worker} that executes the \texttt{run\_cell} task. The worker loads
 the training dataframe, builds the generation prompt for one of the
 three prompt conditions (\texttt{B0}, \texttt{B1}, \texttt{B2}) and
-calls the configurable LLM runner (Ollama or OpenRouter, reached
-through \texttt{call\_llm\_with\_usage}; the reported runs used
-Ollama), recording token usage.
+calls the configurable LLM runner (reached through
+\texttt{call\_llm\_with\_usage}; the reported runs used hosted Ollama
+cloud models), recording token usage.
 
-The emitted pipeline is executed inside a sandboxed Python subprocess
-that captures stdout and stderr, extracts the achieved score,
+The emitted pipeline is executed inside a bounded Python subprocess
+(a separate process under a wall--clock timeout --- not container-level
+isolation) that captures stdout and stderr, extracts the achieved score,
 classifies failures into one of thirteen error categories and
 preserves failed outcomes. For \texttt{B2} runs a verification stage
 follows: the \textbf{implemented verifier} parses the reasoning trace
@@ -75,7 +97,7 @@ decisions that produced it.
 \section{System Workflow}
 
 A single workflow proceeds along the three rows of
-Fig.~\ref{fig:architecture} as follows:
+Fig.~\ref{fig:architecture-flow} as follows:
 
 \begin{enumerate}
     \item \textbf{Request.} The client calls \texttt{POST
@@ -90,8 +112,8 @@ Fig.~\ref{fig:architecture} as follows:
     (B0/B1/B2), calls the LLM runner and receives the generated
     pipeline code (and, under B2, a reasoning trace).
     \item \textbf{Execution.} \texttt{Execute\_pipeline} runs the
-    code in a sandbox, times out on hangs, and extracts the achieved
-    score.
+    code in a bounded subprocess, times out on hangs, and extracts the
+    achieved score.
     \item \textbf{Verification (B2).} The implemented verifier checks
     each decision in the reasoning trace for action presence and
     meta--feature value grounding and records a boolean faithfulness
@@ -114,8 +136,9 @@ The three principal use cases are:
     and a task specification, selects which research questions to
     exercise, and starts a sweep.
     \item \emph{Audit a run} --- a researcher opens a single run,
-    inspects its plan, code, execution trace and verifier verdicts,
-    and reads the source spans of each mismatch.
+    inspects its code, execution trace and (for \texttt{B2}) the
+    faithfulness verdict together with the reasons recorded for any
+    failed check.
     \item \emph{Reproduce an analysis} --- a researcher regenerates
     the aggregate tables for RQ1--RQ5 from the stored run records,
     without re--running the LLM.
@@ -145,16 +168,25 @@ Data flows through the system as follows:
     \item For each cell in a sweep, the RQ worker reads the training
     dataframe and composes a prompt that includes the dataset
     reference, the task type, and the RQ--specific instructions.
-    \item The LLM response is split into a plan string and a code
-    string. Both are retained verbatim, and the code is also lowered
-    into the PIR.
-    \item The sandbox returns a trace object with stdout, stderr,
+    \item The LLM returns a single, self--contained Python script,
+    retained verbatim. Under \texttt{B2} the script, when run, also
+    prints a structured reasoning trace (a small JSON object of
+    decisions) that is captured from its output. The full PIR of
+    Chapter~\ref{ch:method} is proposed and is not built here; the
+    implemented check parses the code only into the set of names it
+    references.
+    \item The subprocess run returns a trace object with stdout, stderr,
     the extracted score (or an error classification) and timing
     data.
-    \item The verifier returns a list of claim records (claim
-    identifier, expected predicate, observed evidence, verdict,
-    category, severity, source span). These records join the plan,
-    code and trace into a single \texttt{RunResultRecord}.
+    \item For \texttt{B2}, the verifier returns a report whose fields
+    are the number of decisions, the number found faithful, a single
+    boolean \texttt{faithful} flag, and a per--decision list recording
+    the step, the cited action, whether that action is present in the
+    code, whether the cited value matched, and human--readable reasons
+    for any failure. The richer records with mismatch category,
+    severity and source span belong to the proposed design. These
+    fields join the code, trace and score into a single
+    \texttt{RunResultRecord}.
     \item The analysis handlers consume \texttt{RunResultRecord}s
     only; no handler reaches back into the live LLM, so analyses are
     repeatable from storage.
@@ -198,10 +230,13 @@ actual ORM definitions.
     counters.
 \end{itemize}
 
-Large artefacts (generated code, long traces) are written to
-\textbf{MinIO} object storage with a path reference kept in the row.
-Writes are idempotent: re--running a cell refreshes its row rather
-than creating duplicates.
+Large artefacts (generated code, long traces) are written to the local
+filesystem under \texttt{logs/runs/}, with a path reference kept in the
+row. The stack also integrates \textbf{MinIO} object storage for these
+artefacts, but MinIO was disabled in the evaluated deployment (its
+images are no longer publicly pullable), so the reported runs used the
+filesystem. Writes are idempotent: re--running a cell refreshes its row
+rather than creating duplicates.
 
 \begin{figure}[H]
     \centering
@@ -260,17 +295,17 @@ The system decomposes into eight modules.
     code--emission prompts for prompt classes \texttt{B0},
     \texttt{B1}, \texttt{B2} and conditional variants.
     \item \textbf{LLM Runner.} Wraps the configurable LLM backend
-    (Ollama or OpenRouter) as \texttt{runner.call\_llm} with explicit
-    input/output fences and usage accounting.
-    \item \textbf{Executor.} The \texttt{Execute\_pipeline} sandbox
-    that runs the generated code, extracts the score, classifies
-    errors on failure and times out hangs.
+    (the reported runs used Ollama) as \texttt{runner.call\_llm} with
+    explicit input/output fences and usage accounting.
+    \item \textbf{Executor.} The \texttt{Execute\_pipeline} bounded
+    subprocess executor that runs the generated code, extracts the
+    score, classifies errors on failure and times out hangs.
     \item \textbf{Verifier.} The B2 module that checks, for each cited
     decision, action presence in the code and meta--feature value
     grounding, recording a boolean faithfulness verdict. Lowering the
     plan into the RIR and the code into the PIR to emit the per--claim
-    verdicts of Chapter~\ref{ch:method} is the proposed extension,
-    realised in the prototype verifier (Chapter~\ref{ch:impl}).
+    verdicts of Chapter~\ref{ch:method} is the proposed extension and
+    is not implemented in this project.
     \item \textbf{Persistence Layer.} \texttt{\_persist} writes the
     \texttt{RunResultRecord} and keeps the audit trail required for
     reproducibility.

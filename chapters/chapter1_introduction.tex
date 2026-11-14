@@ -1,4 +1,5 @@
 \chapter{Introduction}
+\label{ch:intro}
 
 \section{Background}
 
@@ -38,20 +39,15 @@ numerical columns using training statistics only, fit a logistic
 model under a class--imbalance constraint, and report the macro
 F1--score for model selection. The downstream coding agent then
 generates the executable pipeline that is supposed to realise this
-plan. The plan can be used to delegate work, obtain human approval,
-or communicate what the system claims it will do.
+plan.
 
-There are a few practical ways to check such generated pipelines.
-Malformed programs are rejected through syntax and type checks.
-Missing dependencies and runtime exceptions are revealed through
-sandboxed execution. Tests exercise selected behaviour. Standard
-AutoML evaluation then measures the quality of the predictions and
-the resource usage. Execution feedback can be fed back into an LLM
-for self--repair using agentic frameworks such as
-Self--Refine~\cite{selfrefine} and CRITIC~\cite{critic}. These
-checks tell us whether the program runs, or whether it reaches a
-given accuracy threshold, but not whether it is the program that the
-preceding plan actually intended.
+Existing checks tell us a great deal about such pipelines: syntax and
+type checks reject malformed programs, sandboxed execution surfaces
+runtime errors, tests exercise selected behaviour, standard AutoML
+evaluation measures predictive quality and cost, and execution
+feedback can even be fed back for self--repair~\cite{selfrefine,
+critic}. What none of them establishes is whether the program that
+runs is the one the preceding plan actually intended.
 
 \section{Problem Statement}
 
@@ -153,43 +149,37 @@ gap.
 
 \section{Objectives}
 
-The objectives of the proposed project are:
+The objectives of the project are:
 
 \begin{enumerate}
-    \item To formally define reasoning--code alignment as a
-    stand--alone verification problem that is clearly decoupled from
-    reasoning correctness, program correctness, execution success and
-    predictive performance.
+    \item To define reasoning--code alignment as a verification
+    question in its own right, kept separate from whether the plan is
+    a good strategy, whether the code meets a code specification,
+    whether the code runs, and whether it reaches a good score.
 
-    \item To design intermediate representations for both the
-    reasoning artifact (a Reasoning Intermediate Representation,
-    RIR, built from atomic typed claims) and the generated program
-    (a Program Intermediate Representation, PIR, built as a directed
-    attributed multigraph that fuses abstract syntax, dataflow and
-    library semantics), and to construct a mechanically verifiable
-    witness mapping between them.
+    \item To build a working, reproducible pipeline that generates
+    AutoML code with an LLM under three prompting conditions (naive,
+    schema--aware and meta--feature--guided), runs it in a bounded
+    subprocess, and records the plan, the code, the execution outcome
+    and the predictive score for every run.
 
-    \item To design and implement an AutoML--specific mismatch
-    taxonomy and an associated set of coverage, weighted alignment,
-    critical--mismatch and localisation measures that report
-    four--valued verdicts (\textsc{aligned}, \textsc{partially
-    aligned}, \textsc{misaligned} and \textsc{unverifiable}, the last
-    used when semantic equivalence cannot be established).
+    \item To implement a first, deliberately limited faithfulness
+    check that, for each meta--feature--guided run, tests two things
+    mechanically: whether every action the plan names actually appears
+    in the generated code, and whether every dataset statistic the
+    plan cites matches the real meta--features within a small
+    tolerance.
 
-    \item To design a comparison protocol against execution--only,
-    performance--only, LLM--judge and keyword/API baselines using
-    both natural LLM outputs and seeded mutations with
-    human--annotated targets, together with the statistical design
-    needed to report false--alignment rates, macro--F1 of category
-    detection, and localisation accuracy with appropriate
-    confidence intervals.
+    \item To evaluate meta--feature--guided prompting on a controlled
+    270--cell sweep (6 datasets $\times$ 3 conditions $\times$ 3 LLM
+    backends $\times$ 5 seeds), measuring runnability, iteration count,
+    error mix, predictive score and faithfulness, and to run the
+    faithfulness check on the real meta--feature runs.
 
-    \item To build an end--to--end reproducible execution and
-    evaluation pipeline (FastAPI services, a Redis--backed job queue
-    and worker, sandboxed Python execution and a configurable LLM
-    runner supporting OpenRouter or Ollama) that stores plans, code,
-    execution traces and alignment verdicts, and to use it to collect
-    and audit real per--project experimental measurements.
+    \item To state honestly what this first check cannot yet do, and
+    to describe --- as a proposed design and future work, not a
+    delivered system --- the fuller claim--by--claim verifier that
+    would be needed to close the gap.
 \end{enumerate}
 
 \section{Scope}
@@ -198,16 +188,23 @@ The project targets \emph{compositional Python tabular classification
 and regression} pipelines built with scikit--learn~\cite{sklearn}
 and its \texttt{Pipeline}, \texttt{ColumnTransformer}, estimator,
 scoring and custom--transformer abstractions. Within this setting,
-the verifier aims to assess:
+the \emph{implemented} faithfulness check tests two things for each
+run: whether each operator or estimator named in the plan (for
+example a scaler, an imputer or a specific classifier) appears in the
+generated code, and whether each dataset statistic the plan cites
+(for example a missing--value ratio or a class--balance figure)
+matches the value actually computed from the data. A \emph{fuller}
+verifier --- designed in Chapter~\ref*{ch:method} but not implemented
+in this project --- would additionally check:
 \begin{itemize}
-    \item operator identity (which transformer or estimator was
-    used),
     \item the columns to which each operator is applied,
-    \item parameters and ordering of the pipeline,
+    \item the parameters and ordering of the pipeline,
     \item leakage--relevant properties such as whether a scaler is
     fitted before or after the train/validation split,
     \item evaluation metrics and class--balance constraints.
 \end{itemize}
+These richer checks are stated as a target, not as a delivered
+capability.
 
 The following items are explicitly \emph{out of scope} for the first
 version of the system:
@@ -231,75 +228,63 @@ version of the system:
 
 \section{Contributions}
 
-The major contributions made by the project are:
+The contributions of the project are of three kinds --- conceptual,
+engineering and empirical.
 
 \begin{enumerate}
-    \item A clean decoupling of reasoning--code alignment from
-    reasoning correctness, program correctness, execution success
-    and predictive performance, together with a formal statement of
-    the alignment relation as a set--valued mapping from reasoning
-    claims to program witnesses.
+    \item \textbf{(Conceptual.)} A clear separation of reasoning--code
+    alignment from reasoning correctness, program correctness,
+    execution success and predictive performance, stated as the
+    fourth question $Q_A$ above.
 
-    \item A reasoning and program intermediate representation pair
-    (RIR and PIR) suitable for mechanical verification of AutoML
-    pipelines, including a normalised predicate language for
-    scikit--learn operators that resolves aliases, wrappers and
-    trusted summaries.
+    \item \textbf{(Conceptual, proposed.)} A design
+    (Chapter~\ref*{ch:method}) for a fuller verifier: a structured
+    form of the plan and of the code so that each plan claim can be
+    matched to the part of the code that realises it, together with a
+    mismatch taxonomy for AutoML pipelines. This design is specified,
+    not implemented, and is not evaluated in this report.
 
-    \item An AutoML--specific coverage, weighted alignment, critical
-    mismatch and localisation metric suite, together with a
-    mismatch taxonomy covering missing implementation, contradictory
-    implementation, model/parameter/pipeline--order mismatches,
-    evaluation and data--handling mismatches, constraint mismatches,
-    unsupported claims, dead reasoning and extraneous operations.
+    \item \textbf{(Engineering.)} A running, reproducible pipeline ---
+    five FastAPI backend services (data, meta--features, generation,
+    analysis and gateway) and a Streamlit front--end, a Redis--backed
+    job queue and worker, a
+    configurable LLM runner (Ollama cloud models in the reported
+    runs), a bounded subprocess executor and a PostgreSQL database with
+    local--filesystem artefact storage --- that records the plan, code,
+    execution trace and score of every run.
 
-    \item A comparison protocol that evaluates the mechanical
-    verifier against execution--only, performance--only, LLM--judge
-    and keyword/API baselines on natural LLM outputs and on
-    seeded--mutation corpora with human--annotated targets.
+    \item \textbf{(Engineering.)} A first mechanical faithfulness
+    check on the project's \texttt{main} branch that, for every
+    meta--feature--guided run, tests each cited action against the
+    generated code and each cited statistic against the real
+    meta--features, and returns a single pass/fail verdict for the run.
 
-    \item An engineered, running end--to--end implementation of the
-    pipeline --- five FastAPI backend microservices (data,
-    meta--features, generation, analysis and gateway) plus two
-    front--ends (a Streamlit application and a Next.js UI), a Redis
-    job queue and worker, a configurable LLM runner (OpenRouter or
-    Ollama), a sandboxed executor and a PostgreSQL / MinIO store ---
-    together with a first mechanical faithfulness verifier that, for
-    every meta--feature--guided run, checks each cited action against
-    the generated code and each cited statistic against the real
-    dataset meta--features.
-
-    \item An empirical evaluation on a controlled 270--cell sweep that
-    measures meta--feature--guided prompting along five axes
+    \item \textbf{(Empirical.)} A controlled 270--cell study of
+    meta--feature--guided prompting, measured along five axes
     (runnability, iteration cost, error mix, predictive score and
-    faithfulness) and provides evidence towards the project's research
-    questions (RQ1--RQ5, defined in Chapter~\ref*{ch:lit}), and that
-    exercises the faithfulness verifier on real LLM output, where it
-    detected seven pipelines that executed and scored well but whose
-    stated reasoning did not match their code.
+    faithfulness), providing evidence towards the research questions
+    RQ1--RQ5 (defined in Chapter~\ref*{ch:lit}). Running the check on
+    the real meta--feature runs flagged seven pipelines that executed
+    and scored well but whose stated reasoning did not match their
+    code.
 \end{enumerate}
 
 \paragraph{Implementation and validation status.}
 To keep the claims of this report honest, the work is separated into
-three levels throughout. \emph{Designed} items (the full graph--based
-PIR and witness mapping, the complete mismatch taxonomy and the
-baseline comparison protocol) are specified in
-Chapters~\ref*{ch:method} and~\ref*{ch:design} but not all realised in
-code. \emph{Implemented} items --- the five backend services and two
-front--ends, the three prompt conditions, the sandboxed executor and
-the first faithfulness verifier --- exist and run on the project's
-\texttt{main} branch; in addition, a prototype RIR/PIR verifier (a
-stdlib AST extractor, a deterministic rule engine over existence,
-parameter, column and ordering claims, and a four--valued pipeline
-verdict) exists on a separate prototype branch
-(\texttt{feat/rir-pir-verifier}, not merged into \texttt{main}).
-\emph{Validated} items (the prompting study and the first
-\texttt{main}--branch verifier) are supported by the 270--cell sweep
-in Chapter~\ref*{ch:results}; the prototype RIR/PIR verifier has so
-far been exercised only on a small set of hand--checked cases, not on
-the sweep, and is therefore not reported as a validated result. The
-report never presents a designed item as though it were validated, and
-every number in Chapter~\ref*{ch:results} is traceable to the recorded
+three levels throughout. \emph{Designed} items --- the fuller
+claim--by--claim verifier, the mismatch taxonomy and the baseline
+comparison protocol --- are specified in Chapters~\ref*{ch:method}
+and~\ref*{ch:design} but are not implemented in this project.
+\emph{Implemented} items --- the five backend services and the
+Streamlit front--end, the three prompt conditions, the bounded
+subprocess executor and the first faithfulness check --- exist and run
+on the
+project's
+\texttt{main} branch. \emph{Validated} items --- the prompting study
+and the first faithfulness check --- are supported by the 270--cell
+sweep in Chapter~\ref*{ch:results}. The report never presents a
+designed item as though it were implemented or validated, and every
+number in Chapter~\ref*{ch:results} is traceable to the recorded
 experimental run.
 
 \section{Organization of the Report}
@@ -312,10 +297,11 @@ and graph--based verification, and identifies the research gap that
 motivates the project.
 
 \textbf{Chapter~\ref*{ch:method}, Proposed Methodology}, defines
-the four correctness questions, the reasoning--code alignment
-relation, the RIR and PIR intermediate representations, the
-semantic extraction and verdict rules, the mismatch taxonomy and
-the metric suite.
+the four correctness questions and the reasoning--code alignment
+relation, and sets out the \emph{proposed} design for a fuller
+verifier --- structured forms of the plan and the code, the matching
+rules, the mismatch taxonomy and the associated measures --- which is
+specified but not implemented in this project.
 
 \textbf{Chapter~\ref*{ch:design}, System Design}, presents the
 end--to--end architecture, the execution and evaluation pipeline,
@@ -323,18 +309,20 @@ the module decomposition, the data--flow and the storage schema.
 
 \textbf{Chapter~\ref*{ch:impl}, Implementation}, describes the
 development environment, the implementation of each module, the
-integration with the Ollama LLM runner, the sandboxed execution
-layer and the storage of alignment verdicts.
+integration with the Ollama LLM runner, the bounded subprocess
+execution layer and the storage of faithfulness verdicts.
 
 \textbf{Chapter~\ref*{ch:results}, Results and Discussion},
-details the experimental protocol, the baselines, the planned
-analyses for the five research questions, the statistical design,
-and the structure in which per--project results will be reported.
+reports the experimental protocol and the 270--cell sweep, its
+results across the five research questions (runnability, iteration
+cost, error mix, predictive score and faithfulness), the statistical
+analysis, and a discussion of what the faithfulness check did and did
+not catch.
 
 \textbf{Chapter~\ref*{ch:conclusion}, Conclusion and Future
 Scope}, summarises the work, states the limitations and threats to
 validity, and outlines realistic extensions of the framework.
 
-The appendix presents the resulting publication and the mapping of
-the project to Course Outcomes, Program Outcomes and Programme
-Specific Outcomes.
+The appendix presents supporting material and the mapping of the
+project to Course Outcomes, Program Outcomes and Programme Specific
+Outcomes.

@@ -39,10 +39,12 @@ To address this, the project has:
     and localisation accuracy with appropriate confidence
     intervals; and
     \item engineered a running end--to--end implementation --- five
-    FastAPI services and two front--ends, a Redis Queue worker, a
-    configurable LLM runner (Ollama or OpenRouter), a sandboxed
-    executor, a first faithfulness verifier, a PostgreSQL / MinIO
-    store and RQ1--RQ5 analysis handlers; and
+    FastAPI services and a Streamlit front--end, a Redis Queue worker, a
+    configurable LLM runner (Ollama in the reported runs), a bounded
+    subprocess executor, a first faithfulness verifier, a PostgreSQL
+    database with
+    local--filesystem artefact storage and RQ1--RQ5 analysis handlers;
+    and
     \item evaluated that implementation on a real 270--cell sweep,
     where the naive and schema prompt conditions were perfectly
     reliable, the meta--feature condition was markedly less reliable
@@ -51,15 +53,14 @@ To address this, the project has:
     scored well but whose reasoning did not match their code.
 \end{itemize}
 
-The objectives stated in Chapter~\ref{ch:lit} are therefore met at
+The objectives stated in Chapter~\ref{ch:intro} are therefore met at
 three distinct levels, which the report keeps separate.
 \emph{Design and formalisation} of the full reasoning--code alignment
 framework is complete. \emph{Software} exists and runs for the
-pipeline and a first faithfulness verifier, with a larger RIR/PIR
-prototype verifier on a feature branch (not yet merged or validated at
-scale). \emph{Empirical evidence}
-exists for the prompting study and for the core hypothesis that
-execution success does not imply alignment (H1), with preliminary
+pipeline and a first faithfulness verifier (action presence and
+meta--feature value grounding) on \texttt{main}. \emph{Empirical
+evidence} exists for the prompting study and for the core hypothesis
+that execution success does not imply alignment (H1), with preliminary
 support for discrimination (H2). What remains is not design but
 construction and measurement: the graph--based verifier, independent
 pre--code reasoning capture, and the seeded--mutation corpus needed to
@@ -102,6 +103,16 @@ faithful to its plan yet the plan itself be poor, the data biased or
 the model poorly calibrated. Finally, the emitted reasoning does not
 reveal the model's internal computation; the project checks
 artefact--to--artefact conformance, not mechanistic faithfulness.
+
+\textbf{Post--hoc reasoning trace.} The B2 reasoning trace is printed
+by the generated code at run time, so it is a post--hoc self--report
+rather than a plan captured before the code. The verifier can catch a
+trace that contradicts its own code, but not a case where the code and
+the trace are wrong in the same way (for example, both naming
+\texttt{StandardScaler} when the dataset called for
+\texttt{RobustScaler}). Independent pre--code reasoning capture
+(\texttt{B2R}) is designed but not implemented, and is the single most
+important next step.
 
 \textbf{Scope.} The first version of the system targets
 compositional scikit--learn tabular pipelines. Deep--learning,

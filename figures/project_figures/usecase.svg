@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 440" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="820" height="440" fill="#ffffff"/>
+  <text x="20" y="32" font-size="19" font-weight="700" fill="#1a1a1a">Figure 4.2 — Use-case diagram</text>
+  <text x="20" y="54" font-size="13" fill="#777">Functionality actually supported by the main-branch application.</text>
+
+  <!-- actor: Researcher -->
+  <g stroke="#1a1a1a" stroke-width="2" fill="none">
+    <circle cx="90" cy="210" r="16"/>
+    <line x1="90" y1="226" x2="90" y2="272"/>
+    <line x1="64" y1="244" x2="116" y2="244"/>
+    <line x1="90" y1="272" x2="68" y2="306"/>
+    <line x1="90" y1="272" x2="112" y2="306"/>
+  </g>
+  <text x="90" y="330" font-size="14" font-weight="700" fill="#1a1a1a" text-anchor="middle">Researcher</text>
+
+  <!-- system boundary -->
+  <rect x="300" y="80" width="470" height="300" rx="10" fill="#fafafa" stroke="#888" stroke-width="1.5"/>
+  <text x="535" y="106" font-size="13" font-weight="700" fill="#555" text-anchor="middle">AutoML Reasoning–Code Alignment System</text>
+
+  <!-- use case 1 -->
+  <ellipse cx="535" cy="160" rx="150" ry="34" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.8"/>
+  <text x="535" y="158" font-size="14" font-weight="700" fill="#1a1a1a" text-anchor="middle">Submit Workflow</text>
+  <text x="535" y="176" font-size="10.5" fill="#666" text-anchor="middle">upload dataset + task, start a sweep</text>
+
+  <!-- use case 2 -->
+  <ellipse cx="535" cy="240" rx="150" ry="34" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.8"/>
+  <text x="535" y="238" font-size="14" font-weight="700" fill="#1a1a1a" text-anchor="middle">Audit a Run</text>
+  <text x="535" y="256" font-size="10.5" fill="#666" text-anchor="middle">inspect code, trace, faithfulness verdict</text>
+
+  <!-- use case 3 -->
+  <ellipse cx="535" cy="320" rx="150" ry="34" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.8"/>
+  <text x="535" y="318" font-size="14" font-weight="700" fill="#1a1a1a" text-anchor="middle">Reproduce an Analysis</text>
+  <text x="535" y="336" font-size="10.5" fill="#666" text-anchor="middle">regenerate RQ1–RQ5 tables from stored rows</text>
+
+  <!-- associations -->
+  <line x1="116" y1="232" x2="385" y2="160" stroke="#444" stroke-width="1.6"/>
+  <line x1="120" y1="244" x2="385" y2="240" stroke="#444" stroke-width="1.6"/>
+  <line x1="116" y1="256" x2="385" y2="320" stroke="#444" stroke-width="1.6"/>
+</svg>

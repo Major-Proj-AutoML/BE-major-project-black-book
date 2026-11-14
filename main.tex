@@ -34,6 +34,15 @@
 \usepackage{tikz}
 \usepackage{etoolbox}
 \usepackage{pdflscape}
+\usepackage[expansion=false]{microtype}
+
+% ---------------------------------------------------------
+% Prevent long monospace code tokens (e.g. verification_report,
+% nemotron-3-nano:30b-cloud) from running past the right margin:
+% let LaTeX stretch spacing to move them to the next line instead of
+% producing an overfull hbox.
+% ---------------------------------------------------------
+\setlength{\emergencystretch}{3em}
 
 % ---------------------------------------------------------
 % Page setup

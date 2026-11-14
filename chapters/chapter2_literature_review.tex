@@ -163,7 +163,7 @@ Code generation & Usually absent & Program against tests &
 \checkmark & -- & -- \\
 
 \textbf{Proposed framework} & LLM--driven AutoML & Atomic typed
-claims & AST + pipeline graph & Complementary & \checkmark &
+claims & AST (pipeline graph proposed) & Complementary & \checkmark &
 \checkmark \\
 \bottomrule
 \end{tabular}
@@ -222,10 +222,13 @@ from misaligned pipelines more reliably than execution success;
 $H_3$, mismatches form stable AutoML--specific categories; and
 $H_4$, mismatch probability increases with operation count and
 dependency depth. These are stated as hypotheses rather than settled
-findings: Chapter~\ref{ch:results} reports preliminary evidence from
-the 270--cell study --- $H_1$ is supported and $H_2$ has preliminary
-support --- and sets out the fuller protocol needed to evaluate $H_3$
-and $H_4$ at scale.
+findings. Chapter~\ref{ch:results} reports preliminary evidence from
+the 270--cell study: $H_1$ is supported, since seven pipelines
+executed and scored well yet failed the faithfulness check. $H_2$ is
+illustrated by those same detections but is not quantitatively tested
+here --- the head--to--head comparison against execution-- and
+performance--only baselines is left to future work, together with the
+fuller protocol needed to evaluate $H_3$ and $H_4$ at scale.
 
 \section{Summary}
 

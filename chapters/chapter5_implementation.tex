@@ -27,24 +27,23 @@ coded).
 \textbf{Component} & \textbf{Status} \\
 \midrule
 Five FastAPI services (data, meta--features, generation, analysis,
-gateway) plus two front--ends (Streamlit, Next.js) & Implemented \\
+gateway) plus a Streamlit front--end & Implemented \\
 Redis Queue worker + sweep orchestration (\texttt{sweep\_jobs}) &
 Implemented \\
 Three prompt conditions B0 / B1 / B2 & Implemented \\
 Ollama LLM runner (three cloud backends) & Implemented \\
-Sandboxed subprocess executor + 13--category error taxonomy &
-Implemented \\
+Bounded subprocess executor (separate process + wall--clock timeout) +
+13--category error taxonomy & Implemented \\
 Meta--feature extraction (four families) & Implemented \\
-PostgreSQL + MinIO persistence; JSON trace / report sidecars &
-Implemented \\
+PostgreSQL persistence; generated code, traces and report sidecars on
+the local filesystem (\texttt{logs/runs/}) & Implemented \\
 RQ1--RQ5 analysis endpoints, \texttt{/analysis/traces},
 \texttt{/analysis/rule-usage} & Implemented \\
 Faithfulness verifier: action--presence + value--grounding, boolean
 verdict & Implemented (prototype) \\
 AST--based Program IR; existence / parameter / ordering / column
-checks; three--valued claim + four--valued pipeline verdicts; partial
-taxonomy; verifier CLI & Implemented (prototype;
-\texttt{feat/rir-pir-verifier}) \\
+checks; three--valued claim + four--valued pipeline verdicts;
+mismatch taxonomy; verifier CLI & Proposed \\
 Graph--based (multigraph) Program IR; set--valued mapper; full
 mismatch taxonomy as emitted categories; verification dashboard &
 Proposed \\
@@ -73,24 +72,29 @@ Independent pre--code reasoning (\texttt{B2R} mode) & Proposed \\
     \texttt{gpt-oss:120b-cloud}, \texttt{gemma4:31b-cloud} and
     \texttt{nemotron-3-nano:30b-cloud}.
     \item \textbf{Storage.} \textbf{PostgreSQL~16} is the system of
-    record; \textbf{MinIO} holds large artefacts; \textbf{Redis~7}
-    backs the job queue.
+    record; large artefacts (generated code, model files and trace /
+    report sidecars) are written to the local filesystem under
+    \texttt{logs/runs/}; \textbf{Redis~7} backs the job queue. The
+    stack integrates \textbf{MinIO} object storage for artefacts, but
+    it was disabled for the reported runs, as its images are no longer
+    publicly pullable.
     \item \textbf{Tooling.} Per--repository \texttt{git}, \texttt{pytest}
     for unit tests, and this \LaTeX{} report.
 \end{itemize}
 
 \section{Implemented Services}
 
-The stack is seven small services behind a gateway, each with an HTTP
-API and its own container (Table~\ref{tab:services}).
+The stack is five FastAPI backend services (data, meta--features,
+generation, analysis and the gateway) plus a Redis Queue worker and a
+Streamlit front--end, each with its own container (Table~\ref{tab:services}).
 
 \begin{table}[H]
 \centering
-\caption{The seven services and their ports.}
+\caption{Backend services, front--ends and their host ports.}
 \label{tab:services}
 \small
 \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{p{4.2cm} p{1.4cm} p{7cm}}
+\begin{tabular}{p{5.5cm} p{1.7cm} p{6.6cm}}
 \toprule
 \textbf{Service} & \textbf{Port} & \textbf{Responsibility} \\
 \midrule
@@ -105,8 +109,8 @@ success rates, iterations, error mix, significance tests, trace and
 rule--usage reports. \\
 \texttt{automl-gateway} & 8000 & Single entry point; composes
 \texttt{upload-and-extract} and \texttt{full-run} workflows. \\
-\texttt{automl-frontend} / \texttt{-openui} & --- & Streamlit and
-Next.js front--ends for browsing datasets and runs. \\
+\texttt{automl-streamlit} & 8501 & Streamlit front--end for browsing
+datasets and runs. \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -203,7 +207,7 @@ retry (Fig.~\ref{fig:gen-svc}).
     \label{fig:gen-svc}
 \end{figure}
 
-\subsection{Sandboxed Executor and Error Taxonomy}
+\subsection{Bounded Subprocess Executor and Error Taxonomy}
 
 Generated code is written to a temporary file and run in a fresh
 Python subprocess with a per--attempt wall--clock budget; stdout,
@@ -213,7 +217,8 @@ the thirteen--category \texttt{ErrorCategory} taxonomy: a
 priority--ordered, \texttt{stderr}--based classifier assigns the
 code--failure categories (\texttt{syntax\_error}, \texttt{import\_error},
 \texttt{api\_hallucination}, \texttt{shape\_mismatch},
-\texttt{type\_error}, \texttt{missing\_name}, \texttt{timeout},
+\texttt{type\_error}, \texttt{missing\_name},
+\texttt{timeout},
 \texttt{resource\_limit} and others), the leakage guard assigns
 \texttt{suspicious\_leakage}, and the B2 verifier assigns
 \texttt{reasoning\_unfaithful}. Infrastructure--level failures (such as
@@ -259,25 +264,13 @@ three--valued verdict of Chapter~\ref{ch:method} would instead return
 work. This verifier is the mechanism behind the faithfulness result of
 Chapter~\ref{ch:results} (Section~\ref{sec:rq5}).
 
-\paragraph{RIR/PIR prototype (feature branch).} A larger prototype of
-the Chapter~\ref{ch:method} verifier exists on the
-\texttt{feat/rir-pir-verifier} branch (stdlib \texttt{ast} and
-\texttt{dataclasses}, not merged into \texttt{main} and not wired into
-the run tier). It lowers a plan into the RIR and the generated code
-into an AST--based PIR, applies existence, parameter, column and
-ordering rules to produce a three--valued per--claim verdict, and
-aggregates these --- with criticality gating --- into a four--valued
-pipeline verdict, exposed through a small command--line tool. It
-realises the core of the proposed design short of the graph--based PIR
-and the set--valued mapper, and has so far been exercised only on a
-small set of hand--checked cases, not on the 270--run sweep.
-
 \subsection{Persistence and Analysis}
 
 Each cell is persisted as a \texttt{run\_results} row; the B2
 \texttt{reasoning\_trace} and \texttt{verification\_report} are stored
 as JSON columns and also written as \texttt{.trace.json} /
-\texttt{.verification.json} sidecars to MinIO. The analysis service
+\texttt{.verification.json} sidecars on the local filesystem. The
+analysis service
 exposes one read--only endpoint per research question plus
 \texttt{/analysis/traces} and \texttt{/analysis/rule-usage}; because
 it only reads persisted rows, every table in Chapter~\ref{ch:results}
@@ -285,78 +278,79 @@ can be regenerated without re--calling any LLM.
 
 \section{Proposed Components (Designed, Not Yet Implemented)}
 
-Beyond the \texttt{main} verifier, the prototype of
-Section~\ref{subsec:impl-verifier} (branch
-\texttt{feat/rir-pir-verifier}) already implements an AST--based
-Program IR, existence / parameter / ordering / column checks,
-three--valued per--claim and four--valued pipeline verdicts over a
-partial taxonomy, and a standalone CLI; it is not merged into
-\texttt{main}, not wired into the run tier, and not validated at the
-scale of the 270--run study. The remaining parts of
-Chapter~\ref{ch:method} are \emph{not} built anywhere and are not drawn
-upon by the 270--run study of Chapter~\ref{ch:results}: the
-graph--based (multigraph) Program IR; the set--valued
-claim--to--witness mapper with learned ranking; the full mismatch
-taxonomy as emitted categories; and a verification--result dashboard.
-The independent pre--code reasoning capture (\texttt{B2R}) is likewise
-designed but not wired.
+Beyond the \texttt{main} verifier, the parts of Chapter~\ref{ch:method}
+that would make the check cover more of a plan are \emph{not} built in
+this project and are not drawn upon by the 270--run study of
+Chapter~\ref{ch:results}. These are: the AST-- and graph--based
+Program IR; the existence, parameter, ordering and column checks; the
+three--valued per--claim and four--valued pipeline verdicts; the
+set--valued claim--to--witness mapper; the full mismatch taxonomy as
+emitted categories; and a verification--result dashboard. The
+independent pre--code reasoning capture (\texttt{B2R} mode), which
+would replace the post--hoc trace with a plan fixed before the code,
+is likewise designed but not wired. All of these remain future work.
 
 \section{Algorithm: Implemented vs Proposed}
 
-The implemented \texttt{main} verifier is the compact routine on the
-left (presence and value grounding only); the routine on the right is
-the proposed full verifier, most of which --- the RIR, the AST--based
-PIR, the three--valued conjunction over presence, parameters and
-ordering, and the aggregation --- is realised by the prototype of
-Section~\ref{subsec:impl-verifier}, short of the graph PIR and the
-set--valued mapper.
+The implemented \texttt{main} verifier is the compact routine of
+Figure~\ref{fig:verify-impl} (presence and value grounding only); the
+flowchart of Figure~\ref{fig:verify-proposed} is the proposed full
+verifier of Chapter~\ref{ch:method} --- the RIR, the AST-- and
+graph--based PIR, the three--valued conjunction over presence,
+parameters and ordering, the set--valued mapper and the aggregation ---
+which is specified but not implemented in this project.
 
-\begin{lstlisting}[language=Python,caption={Implemented: boolean faithfulness check (prototype v1).}]
-def verify_reasoning(trace, code, meta):
-    code_names = names_in_code(code)      # ast walk -> set[str]
-    verdicts = []
-    for d in trace.decisions:
-        present = d.action in code_names          # presence
-        value_ok = value_matches(d.observed_value,
-                                 lookup(meta, d.meta_feature))  # grounding
-        verdicts.append((present, value_ok))
-    faithful = len(verdicts) > 0 and all(
-        p and (v is not False) for p, v in verdicts)
-    return VerificationReport(faithful=faithful, verdicts=verdicts)
-\end{lstlisting}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/project_figures/listing_5.1.png}
+    \caption{Implemented boolean faithfulness check
+    (\texttt{verify\_reasoning} on \texttt{main}): for each decision,
+    action--presence in the AST name set and meta--feature value
+    grounding, reduced to a single boolean verdict (an all--faithful run
+    passes; otherwise \texttt{reasoning\_unfaithful}).}
+    \label{fig:verify-impl}
+\end{figure}
 
-\begin{lstlisting}[language=Python,caption={Proposed: full RIR--PIR claim verdicts (designed, Chapter~\ref{ch:method}).}]
-def verify(plan, code):                   # PROPOSED
-    rir = build_rir(plan)                  # atomic typed claims
-    pir = build_pir(code)                  # attributed multigraph
-    verdicts = []
-    for r in rir:
-        cands = mapper(r, pir)             # set-valued witness
-        v = three_valued_and(presence(r, cands), semantics(r, cands),
-                              parameters(r, cands), ordering(r, pir),
-                              dependency(r, pir))
-        verdicts.append(ClaimReport(r, cands, v, classify(r, cands, v)))
-    return aggregate(verdicts)             # coverage, S_align, CMR, loc.
-\end{lstlisting}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/project_figures/listing_5.2.png}
+    \caption{Proposed full RIR--PIR verifier (designed in
+    Chapter~\ref{ch:method}, \emph{not} implemented): per--claim
+    three--valued verdicts over presence, semantics, parameters,
+    ordering and dependency, aggregated with criticality gating into
+    coverage, weighted alignment, critical--mismatch rate, localisation
+    and a four--valued pipeline verdict.}
+    \label{fig:verify-proposed}
+\end{figure}
 
 \section{Security and Privacy}
 
-The verifier executes untrusted LLM--generated code, so the sandbox is
-the main security concern. Mitigations: the subprocess runs with a
-bounded wall--clock budget in a temporary working directory that is
-discarded afterwards; a leakage guard flags any near--perfect score
-(\texttt{>=0.995}) on a classification task for review; and raw
-dataset rows are never sent to the LLM runner --- only meta--features
-and column descriptors are. Static import pinning and a private--bound
-API with a key are specified for deployment and are partially in place.
+The system executes LLM--generated code, so the execution environment is
+a security consideration. What is implemented is \emph{bounded subprocess
+execution}, not a hardened sandbox: each pipeline runs as a separate
+Python subprocess (no shared memory with the parent) under a wall--clock
+timeout, with its code and output persisted under \texttt{logs/runs/}
+for later inspection. This bounds run time and isolates process memory,
+but it is an operational safeguard, \emph{not} a security boundary ---
+the subprocess inherits the parent environment and has the same
+filesystem and network access as the host user, and there is no
+container, OS--level, filesystem or network isolation and no memory or
+CPU limit. Running genuinely untrusted code safely would require adding
+such isolation (a container or a restricted runtime), which is future
+work. Two data--safety measures are in place: a leakage guard flags any
+near--perfect score (\texttt{>=0.995}) on a classification task for
+review, and raw dataset rows are never sent to the LLM runner --- only
+meta--features and column descriptors are.
 
 \section{Summary}
 
-The implemented system is a running, seven--service FastAPI stack that
-generates scikit--learn pipelines under three prompt conditions,
-executes them in a sandbox, classifies failures, and --- for B2 ---
+The implemented system is a running stack of five FastAPI backend
+services, a Streamlit front--end and a Redis Queue worker that generates
+scikit--learn pipelines under three prompt conditions, runs them in a
+bounded subprocess, classifies failures, and --- for B2 ---
 mechanically checks the reasoning trace for action presence and
-value grounding, persisting everything to PostgreSQL and MinIO. The
+value grounding, persisting run records to PostgreSQL and artefacts to
+the local filesystem. The
 full graph--based verifier of Chapter~\ref{ch:method} remains proposed.
 The next chapter evaluates exactly what is implemented here on a real
 270--cell experimental sweep.

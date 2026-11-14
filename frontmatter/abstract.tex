@@ -30,31 +30,35 @@ metric suite.
 
 Second, as an \emph{implementation} contribution, we build a working
 end--to--end LLM--driven AutoML stack --- five FastAPI microservices
-and two front--ends, a Redis--backed job queue and worker, a
-configurable LLM runner (Ollama or OpenRouter), a sandboxed subprocess
-executor, and a PostgreSQL / MinIO store --- that generates
+and a Streamlit front--end, a Redis--backed job queue and worker, a
+configurable LLM runner (Ollama in the reported runs), a bounded
+subprocess executor, and a PostgreSQL store with artefacts on the local filesystem --- that generates
 scikit--learn pipelines under three prompt
 conditions (B0 naive, B1 schema, B2 meta--feature--guided) and runs a
 first mechanical faithfulness verifier on every B2 run, checking that
 each cited action appears in the generated code and that each cited
-dataset statistic matches the real meta--feature.
+dataset statistic matches the real meta--feature. Because this trace
+is printed by the generated code at run time, it is a post--hoc
+self--report rather than a plan captured before the code; the check
+therefore tests code--trace consistency, not independently grounded
+intent.
 
 Third, as an \emph{empirical} contribution, we evaluate the stack on
 a controlled 270--cell sweep (6 tabular datasets $\times$ 3
 conditions $\times$ 3 model backends $\times$ 5 seeds). The naive and
 schema conditions are completely reliable (100\,\% runnable code),
 whereas the meta--feature condition is markedly less reliable
-(62.2\,\% success) and 5--25$\times$ more expensive in prompt tokens,
-without any statistically significant improvement in predictive score
-(paired Wilcoxon, all $p>0.09$). Crucially, the faithfulness verifier
+(70.0\,\% of runs executed and produced a score; 62.2\,\% also passed
+the faithfulness check) and roughly 5--27$\times$ more expensive in
+prompt tokens, without any statistically significant improvement in
+predictive score (paired Wilcoxon over executed runs, all $p>0.09$). Crucially, the faithfulness verifier
 flagged seven B2 runs that executed successfully and produced good
 scores but whose stated reasoning did not match their code --- a
 failure mode that execution-- and performance--based checks cannot
 detect. The richer graph--based verifier, the independent pre--code
-reasoning capture and the baseline comparison are designed --- with a
-rule--based verifier prototype on a feature branch --- but not yet
-evaluated at population scale; the report marks these as future work
-rather than completed results.
+reasoning capture and the baseline comparison are designed but not
+implemented or evaluated in this project; the report marks these as
+future work rather than completed results.
 
 \medskip
 

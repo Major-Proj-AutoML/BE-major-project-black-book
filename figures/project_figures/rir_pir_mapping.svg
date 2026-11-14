@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 660" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="1040" height="660" fill="#ffffff"/>
+  <!-- title -->
+  <text x="20" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Figure 3.1 — Proposed RIR → PIR claim-to-code mapping</text>
+  <text x="20" y="56" font-size="13" fill="#777777">Design only; not implemented on the main branch. Example: RobustScaler on the Titanic Fare column.</text>
+
+  <!-- PROPOSED banner -->
+  <rect x="820" y="16" width="200" height="30" rx="6" fill="#fdecea" stroke="#d9534f"/>
+  <text x="920" y="36" font-size="13" font-weight="700" fill="#b52b27" text-anchor="middle">PROPOSED FRAMEWORK</text>
+
+  <!-- ===== Reasoning path (left) ===== -->
+  <text x="20" y="92" font-size="13" font-weight="700" fill="#3b6ea5">REASONING SIDE (LLM)</text>
+  <!-- NL reasoning -->
+  <rect x="20" y="104" width="300" height="140" rx="8" fill="#ffffff" stroke="#3b6ea5" stroke-width="1.5"/>
+  <text x="34" y="128" font-size="13" font-weight="700" fill="#3b6ea5">Natural-language reasoning</text>
+  <text x="34" y="152" font-size="12.5" fill="#1a1a1a" font-style="italic">"Fare is heavily skewed with many</text>
+  <text x="34" y="170" font-size="12.5" fill="#1a1a1a" font-style="italic">outliers (outlier ratio 0.128 &gt; 0.05),</text>
+  <text x="34" y="188" font-size="12.5" fill="#1a1a1a" font-style="italic">so I scale it with RobustScaler,</text>
+  <text x="34" y="206" font-size="12.5" fill="#1a1a1a" font-style="italic">not StandardScaler."</text>
+
+  <!-- arrow NL -> RIR -->
+  <line x1="320" y1="174" x2="372" y2="174" stroke="#555" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="346" y="166" font-size="11" fill="#555" text-anchor="middle">extract</text>
+
+  <!-- RIR claim -->
+  <rect x="374" y="104" width="300" height="140" rx="8" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.5"/>
+  <text x="388" y="128" font-size="13" font-weight="700" fill="#3b6ea5">RIR — atomic typed claim</text>
+  <text x="388" y="150" font-size="12" fill="#1a1a1a" font-family="Consolas, monospace">op        = scale</text>
+  <text x="388" y="167" font-size="12" fill="#1a1a1a" font-family="Consolas, monospace">scope     = {Fare}</text>
+  <text x="388" y="184" font-size="12" fill="#1a1a1a" font-family="Consolas, monospace">family    = robust_scaling</text>
+  <text x="388" y="201" font-size="12" fill="#1a1a1a" font-family="Consolas, monospace">observed  = 0.128</text>
+  <text x="388" y="218" font-size="12" fill="#1a1a1a" font-family="Consolas, monospace">action    = RobustScaler</text>
+
+  <!-- ===== Program path (left, lower) ===== -->
+  <text x="20" y="300" font-size="13" font-weight="700" fill="#2a7f62">PROGRAM SIDE (generated code)</text>
+  <!-- generated code -->
+  <rect x="20" y="312" width="300" height="140" rx="8" fill="#ffffff" stroke="#2a7f62" stroke-width="1.5"/>
+  <text x="34" y="336" font-size="13" font-weight="700" fill="#2a7f62">Generated Python</text>
+  <text x="34" y="360" font-size="11.5" fill="#1a1a1a" font-family="Consolas, monospace">from sklearn.preprocessing</text>
+  <text x="34" y="376" font-size="11.5" fill="#1a1a1a" font-family="Consolas, monospace">     import RobustScaler</text>
+  <text x="34" y="392" font-size="11.5" fill="#1a1a1a" font-family="Consolas, monospace">from sklearn.compose import</text>
+  <text x="34" y="408" font-size="11.5" fill="#1a1a1a" font-family="Consolas, monospace">     ColumnTransformer</text>
+  <text x="34" y="428" font-size="11.5" fill="#1a1a1a" font-family="Consolas, monospace">pre = ColumnTransformer([</text>
+  <text x="34" y="444" font-size="11.5" fill="#1a1a1a" font-family="Consolas, monospace"> ("num", RobustScaler(), ["Fare"])])</text>
+
+  <!-- arrow code -> PIR -->
+  <line x1="320" y1="382" x2="372" y2="382" stroke="#555" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="346" y="374" font-size="11" fill="#555" text-anchor="middle">lower (AST)</text>
+
+  <!-- PIR -->
+  <rect x="374" y="312" width="300" height="140" rx="8" fill="#eaf5f0" stroke="#2a7f62" stroke-width="1.5"/>
+  <text x="388" y="336" font-size="13" font-weight="700" fill="#2a7f62">PIR — program representation</text>
+  <text x="388" y="358" font-size="12" fill="#1a1a1a" font-family="Consolas, monospace">import: RobustScaler</text>
+  <text x="388" y="375" font-size="12" fill="#1a1a1a" font-family="Consolas, monospace">AST call node: RobustScaler()</text>
+  <text x="388" y="392" font-size="12" fill="#1a1a1a" font-family="Consolas, monospace">column literals: {"Fare"}</text>
+  <text x="388" y="409" font-size="12" fill="#1a1a1a" font-family="Consolas, monospace">wired into ColumnTransformer</text>
+  <text x="388" y="432" font-size="11" fill="#777" font-style="italic">(full graph PIR is proposed)</text>
+
+  <!-- map arrow RIR <-> PIR -->
+  <line x1="524" y1="244" x2="524" y2="312" stroke="#b52b27" stroke-width="2.2" marker-end="url(#ahr)"/>
+  <text x="534" y="282" font-size="11.5" font-weight="700" fill="#b52b27">claim → witness</text>
+  <text x="534" y="297" font-size="11.5" font-weight="700" fill="#b52b27">mapping</text>
+
+  <!-- ===== Verdict panel (right) ===== -->
+  <rect x="712" y="104" width="308" height="360" rx="8" fill="#fafafa" stroke="#cccccc" stroke-width="1.5"/>
+  <text x="726" y="130" font-size="14" font-weight="700" fill="#1a1a1a">Per-check verdicts</text>
+
+  <!-- presence -->
+  <circle cx="738" cy="160" r="9" fill="#2e8b57"/><text x="738" y="165" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">&#10003;</text>
+  <text x="756" y="158" font-size="13" font-weight="700" fill="#1a1a1a">Presence</text>
+  <text x="756" y="175" font-size="11.5" fill="#444">RobustScaler appears in the code</text>
+  <text x="756" y="190" font-size="11" fill="#2e8b57" font-weight="700">IMPLEMENTED (main)</text>
+
+  <!-- value -->
+  <circle cx="738" cy="222" r="9" fill="#2e8b57"/><text x="738" y="227" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">&#10003;</text>
+  <text x="756" y="220" font-size="13" font-weight="700" fill="#1a1a1a">Value grounding</text>
+  <text x="756" y="237" font-size="11.5" fill="#444">observed 0.128 = real meta-feature</text>
+  <text x="756" y="252" font-size="11" fill="#2e8b57" font-weight="700">IMPLEMENTED (main)</text>
+
+  <!-- column -->
+  <circle cx="738" cy="284" r="9" fill="#ffffff" stroke="#8a8a8a" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="756" y="282" font-size="13" font-weight="700" fill="#8a8a8a">Column</text>
+  <text x="756" y="299" font-size="11.5" fill="#777">applied to {Fare}</text>
+  <text x="756" y="314" font-size="11" fill="#8a8a8a" font-weight="700">PROPOSED</text>
+
+  <!-- order -->
+  <circle cx="738" cy="346" r="9" fill="#ffffff" stroke="#8a8a8a" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="756" y="344" font-size="13" font-weight="700" fill="#8a8a8a">Order</text>
+  <text x="756" y="361" font-size="11.5" fill="#777">fit after train/validation split</text>
+  <text x="756" y="376" font-size="11" fill="#8a8a8a" font-weight="700">PROPOSED</text>
+
+  <!-- pipeline verdict -->
+  <line x1="726" y1="398" x2="1006" y2="398" stroke="#ddd"/>
+  <rect x="726" y="410" width="280" height="40" rx="6" fill="#eef7f1" stroke="#2e8b57"/>
+  <text x="866" y="428" font-size="12.5" font-weight="700" fill="#2e8b57" text-anchor="middle">Pipeline verdict: ALIGNED</text>
+  <text x="866" y="443" font-size="10.5" fill="#555" text-anchor="middle">on the two implemented checks (presence + value)</text>
+
+  <!-- arrows from RIR and PIR into verdict panel -->
+  <line x1="674" y1="150" x2="712" y2="150" stroke="#999" stroke-width="1.5" marker-end="url(#ah)"/>
+  <line x1="674" y1="360" x2="700" y2="360" stroke="#999" stroke-width="1.5"/>
+  <line x1="700" y1="360" x2="700" y2="250" stroke="#999" stroke-width="1.5"/>
+  <line x1="700" y1="250" x2="712" y2="250" stroke="#999" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <!-- legend -->
+  <text x="20" y="510" font-size="12" font-weight="700" fill="#1a1a1a">Legend</text>
+  <circle cx="30" cy="532" r="8" fill="#2e8b57"/><text x="30" y="537" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">&#10003;</text>
+  <text x="46" y="536" font-size="12" fill="#444">check performed by the main-branch verifier</text>
+  <circle cx="330" cy="532" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="346" y="536" font-size="12" fill="#444">proposed check (not implemented)</text>
+
+  <defs>
+    <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#555"/></marker>
+    <marker id="ahr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#b52b27"/></marker>
+  </defs>
+</svg>

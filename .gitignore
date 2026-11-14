@@ -1,0 +1,70 @@
+
+# ==============================
+# LaTeX auxiliary / build files
+# ==============================
+
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.toc
+*.log
+*.synctex.gz
+*.run.xml
+*.xdv
+*.nav
+*.snm
+*.vrb
+*.upa
+*.upb
+*.idx
+*.ilg
+*.ind
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
+*.thm
+
+# ==============================
+# Build directories
+# ==============================
+
+_build/
+build/
+out/
+
+# ==============================
+# Editor / OS files
+# ==============================
+
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================
+# Temporary files
+# ==============================
+
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# ==============================
+# MiKTeX / latexmk
+# ==============================
+
+*.synctex(busy)
+missfont.log
