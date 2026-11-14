@@ -302,25 +302,28 @@ which is specified but not implemented in this project.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.6\textwidth]{figures/project_figures/listing_5.1.png}
-    \caption{Implemented boolean faithfulness check
-    (\texttt{verify\_reasoning} on \texttt{main}): for each decision,
-    action--presence in the AST name set and meta--feature value
-    grounding, reduced to a single boolean verdict (an all--faithful run
-    passes; otherwise \texttt{reasoning\_unfaithful}).}
-    \label{fig:verify-impl}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.6\textwidth]{figures/project_figures/listing_5.2.png}
-    \caption{Proposed full RIR--PIR verifier (designed in
-    Chapter~\ref{ch:method}, \emph{not} implemented): per--claim
-    three--valued verdicts over presence, semantics, parameters,
-    ordering and dependency, aggregated with criticality gating into
-    coverage, weighted alignment, critical--mismatch rate, localisation
-    and a four--valued pipeline verdict.}
-    \label{fig:verify-proposed}
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/project_figures/listing_5.1.png}
+        \caption{Implemented (\texttt{main}): boolean faithfulness check
+        --- action presence + value grounding.}
+        \label{fig:verify-impl}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/project_figures/listing_5.2.png}
+        \caption{Proposed (not implemented): full RIR--PIR verifier with
+        per--claim verdicts and metrics.}
+        \label{fig:verify-proposed}
+    \end{subfigure}
+    \caption{Verifier logic, implemented versus proposed: (a) the
+    boolean check that runs on \texttt{main} (an all--faithful run
+    passes, otherwise \texttt{reasoning\_unfaithful}); (b) the fuller
+    RIR--PIR verifier designed in Chapter~\ref{ch:method} (three-- and
+    four--valued verdicts, mismatch taxonomy and metrics), which is not
+    implemented in this project.}
+    \label{fig:verify}
 \end{figure}
 
 \section{Security and Privacy}

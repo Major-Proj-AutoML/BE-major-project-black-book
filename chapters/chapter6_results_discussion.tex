@@ -401,47 +401,6 @@ complexity stratification) \\
 \end{tabular}
 \end{table}
 
-\section{Comparison with Baselines (Planned)}
-
-Chapter~\ref{ch:method} specifies a comparison of the mechanical
-verifier against four baselines --- execution--only,
-performance--only, LLM--judge and keyword/API --- on a
-seeded--mutation corpus with human--annotated targets. That corpus
-and its annotations have not yet been built, so the quantitative
-comparison (false--alignment rate, category macro--F1, localisation
-IoU) is \textbf{future work}; Table~\ref{tab:results} records its
-pre--committed structure.
-
-\begin{table}[H]
-\centering
-\caption{Structure of the planned baseline comparison. Entries are
-left blank pending the seeded--mutation corpus.}
-\label{tab:results}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Method} & \textbf{Coverage} & \textbf{S\textsubscript{align}}
-& \textbf{CMR $\downarrow$} & \textbf{Loc.\ macro--F1} \\
-\midrule
-Execution--only & -- & -- & -- & -- \\
-Performance--only & -- & -- & -- & -- \\
-LLM judge & -- & -- & -- & -- \\
-Keyword / API match & -- & -- & -- & -- \\
-Mechanical verifier (proposed) & -- & -- & -- & -- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-One claim must be stated carefully. It is \emph{definitionally} true
-that an execution-- or performance--only baseline, which never reads
-the plan, cannot flag a reasoning--code misalignment that is
-compatible with running code and a good score --- the seven runs of
-Section~\ref{sec:rq2} are concrete instances. But a precise
-\emph{false--alignment rate} for such a baseline is a quantity to be
-\emph{measured} on the annotated corpus, not asserted as 100\,\%; the
-earlier draft's blanket ``100\,\% false alignment'' claim has been
-removed as unsupported.
-
 \section{Discussion}
 
 \textbf{A useful negative result.} Across three backends and six
