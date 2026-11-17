@@ -131,10 +131,17 @@ mechanical plan--code link.
 \caption{Representative approaches relative to the proposed
 verification layer.}
 \label{tab:relwork}
-\small
-\setlength{\tabcolsep}{4pt}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.25}
-\begin{tabular}{p{2.3cm} p{2.4cm} p{2.4cm} p{2.2cm} c c c}
+\begin{tabular}{@{}
+    >{\raggedright\arraybackslash}p{2.10cm}
+    >{\raggedright\arraybackslash}p{2.00cm}
+    >{\raggedright\arraybackslash}p{2.35cm}
+    >{\raggedright\arraybackslash}p{2.45cm}
+    >{\centering\arraybackslash}p{1.40cm}
+    >{\centering\arraybackslash}p{1.55cm}
+    >{\centering\arraybackslash}p{1.40cm}@{}}
 \toprule
 \textbf{Work} & \textbf{Domain} & \textbf{Reasoning artifact} &
 \textbf{Program artifact} & \textbf{Exec.} & \textbf{AutoML} &
@@ -151,7 +158,7 @@ FlowPipe~\cite{flowpipe} & Data--prep pipelines & LLM--derived
 priors & Policy--generated pipeline & \checkmark & \checkmark & -- \\
 
 Typed CoT~\cite{perrier2025} & Formalised reasoning & Typed
-proof/dataflow & Not AutoML code & -- & -- & -- \\
+proof/\allowbreak dataflow & Not AutoML code & -- & -- & -- \\
 
 CRV~\cite{zhao2026crv} & Mechanistic verification & Latent
 attribution graph & No pipeline code & -- & -- & -- \\
@@ -164,7 +171,7 @@ Code generation & Usually absent & Program against tests &
 \checkmark & -- & -- \\
 
 \textbf{Proposed framework} & LLM--driven AutoML & Atomic typed
-claims & AST (pipeline graph proposed) & Complementary & \checkmark &
+claims & AST (pipeline graph proposed) & Separate layer & \checkmark &
 \checkmark \\
 \bottomrule
 \end{tabular}
