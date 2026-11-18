@@ -88,7 +88,7 @@ branch was inspected, merged, or used as evidence.
 - Removed the feature-branch "RIR/PIR prototype verifier on a feature branch" sentence.
 - LLM runner OpenRouter → Ollama; `MinIO` → filesystem.
 - **Added** the post-hoc reasoning-trace limitation to the Limitations list (with the
-  StandardScaler/RobustScaler "wrong-in-the-same-way" example).
+  StandardScaler/RobustScaler "wrong-in-the-same-way" example). 
 
 ### Front matter & appendix
 - `project_details.tex`: `\studenttwoprn` `06.` → `06`.

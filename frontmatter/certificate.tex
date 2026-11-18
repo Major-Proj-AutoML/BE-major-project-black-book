@@ -13,24 +13,26 @@ Artificial Intelligence and Data Science.
 \vspace{0.4cm}
 
 The project work has been completed under the supervision and guidance
-of the faculty member named below. This certificate records the project
-guide, external examiner, Head of Department and Principal in the
-required order.
+of the project guide named below.
 
 \vspace{2.2cm}
 
-\begin{center}
-\renewcommand{\arraystretch}{1.25}
-\begin{tabular}{>{\centering\arraybackslash}p{7cm} >{\centering\arraybackslash}p{7cm}}
-\shortstack{\rule{5cm}{0.4pt}\\[3pt] Signature\\[2pt] \textbf{Project Guide}\\ \guidename\\ \guideDesignation}
-&
-\shortstack{\rule{5cm}{0.4pt}\\[3pt] Signature\\[2pt] \textbf{External Examiner}\\ Name:~\rule{3cm}{0.4pt}\\ ~}
-\\[1.9cm]
-\shortstack{\rule{5cm}{0.4pt}\\[3pt] Signature\\[2pt] \textbf{Head of Department}\\ \hodname\\ \hodDesignation}
-&
-\shortstack{\rule{5cm}{0.4pt}\\[3pt] Signature\\[2pt] \textbf{Principal}\\ \principalname\\ \principalDesignation}
-\end{tabular}
-\end{center}
+\newcommand{\certificateblock}[2]{%
+  \begin{minipage}[t][1.9cm][t]{0.46\textwidth}
+  \centering
+  \rule{5cm}{0.4pt}\\[3pt]
+  Signature\\[2pt]
+  \textbf{#1}\\
+  #2
+  \end{minipage}%
+}
+\noindent\certificateblock{Project Guide}{\guidename}\hfill
+\certificateblock{External Examiner}{Name:~\rule{3cm}{0.4pt}}
+
+\vspace{1.9cm}
+
+\noindent\certificateblock{Head of Department}{\hodname}\hfill
+\certificateblock{Principal}{\principalname}
 
 \vfill
 
