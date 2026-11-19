@@ -1,9 +1,11 @@
 \chapter{Supplementary Project Evidence}
 
 This appendix records the project team's publication preparation,
-source repositories, and course outcomes relevant to the major project.
+source repositories, sustainable-development goals, course-outcome
+mappings, and supporting evidence relevant to the major project.
 
 \section{Publication}
+\label{sec:appendix-publication}
 
 A research paper titled \emph{Mechanical Verification of
 Reasoning-Code Alignment in LLM-Driven AutoML Pipelines} has been
@@ -12,6 +14,7 @@ Godambe, and Sarvesh Rakte. No venue acceptance or DOI for the paper
 is claimed.
 
 \section{Open-Source Contribution}
+\label{sec:appendix-opensource}
 
 The project source is organised in eight repositories under the
 \texttt{Major-Proj-AutoML} GitHub organisation:
@@ -46,9 +49,9 @@ above identify the other project repositories.
 
 \section{Sustainable Development Goals}
 
-Table~\ref{tab:sdg} summarises the project's intended contribution
-to the Sustainable Development Goals (SDGs). These are potential
-applications of the work, not measured social-impact outcomes.
+The project team identifies SDGs 4, 8, 9 and 12 as relevant to this
+work. Table~\ref{tab:sdg} describes possible contributions; the
+project did not measure educational, economic or environmental impact.
 
 \begin{table}[H]
 \centering
@@ -64,19 +67,26 @@ applications of the work, not measured social-impact outcomes.
 \toprule
 \textbf{SDG} & \textbf{Goal} & \textbf{Potential contribution} \\
 \midrule
-SDG 4 & Quality Education & Makes the construction of machine-learning
-pipelines more accessible and their generated reasoning easier to audit. \\
-SDG 8 & Decent Work and Economic Growth & Automates some repetitive
-data-science tasks while retaining an explicit verification step. \\
-SDG 9 & Industry, Innovation and Infrastructure & Provides a modular
-AutoML platform with a first reasoning-code faithfulness check. \\
-SDG 12 & Responsible Consumption and Production & Records execution,
-failure, and token costs alongside generated pipeline results. \\
+SDG 4 & Quality Education & Could support teaching of machine-learning
+pipeline design through inspectable plans, code and verification findings. \\
+SDG 8 & Decent Work and Economic Growth & Could reduce repetitive
+pipeline drafting while keeping human review of generated code. \\
+SDG 9 & Industry, Innovation and Infrastructure & Combines modular
+AutoML services with an initial check of reasoning--code alignment. \\
+SDG 12 & Responsible Consumption and Production & Records failures
+and prompt-token costs that could inform more resource-conscious runs. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Major Project Course Outcomes}
+\section{Course Outcomes, PO and PSO Mapping}
+
+The mappings below are the project team's evidence-based assessment,
+not a prescribed institutional attainment matrix. They use the
+Major Project 2 Course Outcomes and the department template's PO and
+PSO labels.
+
+\subsection{Course Outcomes}
 
 The following is a concise paraphrase of the six Course Outcomes for
 \emph{Major Project 2} (ADP801) in the
@@ -93,3 +103,198 @@ The following is a concise paraphrase of the six Course Outcomes for
     \item Demonstrate self-learning and lifelong learning in a group.
     \item Apply project-management principles during the project.
 \end{enumerate}
+
+\subsection{Project Contribution to Program Outcomes}
+
+Table~\ref{tab:project-po} relates the department template's Program
+Outcomes (POs) to documented work. A limited contribution is stated
+where the report does not provide direct outcome measurements.
+
+\begin{table}[H]
+\centering
+\caption{Project contribution to Program Outcomes}
+\label{tab:project-po}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.9cm}
+  >{\raggedright\arraybackslash}p{3.4cm}
+  >{\raggedright\arraybackslash}p{9.7cm}@{}}
+\toprule
+\textbf{PO} & \textbf{Outcome} & \textbf{Evidence from the project} \\
+\midrule
+PO1 & Engineering Knowledge & AutoML, program analysis and evaluation
+methods inform the design and prototype (Chapters~\ref{ch:method}
+and~\ref{ch:impl}). \\
+PO2 & Problem Analysis & The literature review identifies the
+reasoning--code alignment gap and motivates a mismatch taxonomy
+(Chapters~\ref{ch:lit} and~\ref{ch:method}). \\
+PO3 & Design/Development of Solutions & A modular service architecture
+and an initial mechanical verifier are designed and implemented
+(Chapters~\ref{ch:design} and~\ref{ch:impl}). \\
+PO4 & Conduct Investigations & The controlled 270-cell sweep, paired
+comparisons and threats-to-validity analysis are reported in
+Chapter~\ref{ch:results}. \\
+PO5 & Engineering Tool Usage & The implementation uses Python,
+scikit-learn, FastAPI, Redis Queue and PostgreSQL
+(Chapter~\ref{ch:impl}). \\
+PO6 & The Engineer and the World & SDGs 4, 8, 9 and 12 are considered
+as potential applications; social or environmental effects were
+not measured (Table~\ref{tab:sdg}). \\
+PO7 & Ethics & Raw dataset rows are withheld from the LLM runner;
+the limits of subprocess isolation are disclosed
+(Chapter~\ref{ch:impl}). \\
+PO8 & Individual and Collaborative Team Work & The four student
+contributors share the project repositories listed in
+Section~\ref{sec:appendix-opensource};
+individual roles are not inferred from repository ownership. \\
+PO9 & Communication & The report documents the method, diagrams,
+implementation and results; a paper manuscript has been prepared
+(Chapters~\ref{ch:method}--\ref{ch:results} and
+Section~\ref{sec:appendix-publication}). \\
+PO10 & Project Management and Finance & The factorial run plan and
+bounded execution show technical planning; no financial accounting
+is claimed (Chapters~\ref{ch:impl} and~\ref{ch:results}). \\
+PO11 & Life-Long Learning & The literature review and integration of
+AutoML and program-analysis methods demonstrate independent technical
+study (Chapters~\ref{ch:lit} and~\ref{ch:method}). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Project Contribution to PSOs}
+
+\begin{table}[H]
+\centering
+\caption{Project contribution to Programme Specific Outcomes}
+\label{tab:project-pso}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.1cm}
+  >{\raggedright\arraybackslash}p{3.6cm}
+  >{\raggedright\arraybackslash}p{9.1cm}@{}}
+\toprule
+\textbf{PSO} & \textbf{Outcome} & \textbf{Evidence from the project} \\
+\midrule
+PSO1 & Professional Skills & The team applies machine learning,
+meta-features, program analysis and statistical comparison to a
+tabular AutoML problem (Chapters~\ref{ch:method}--\ref{ch:results}). \\
+PSO2 & Successful Career & The implemented services and documented
+evaluation demonstrate applied AI and data-science practice; no
+employment outcome is claimed (Chapters~\ref{ch:impl}
+and~\ref{ch:results}). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{CO--PO Mapping}
+
+Table~\ref{tab:co-po} uses the department template's scale:
+3 = substantial direct contribution, 2 = meaningful partial
+contribution, 1 = limited indirect contribution, and -- = no
+significant contribution evidenced. The numbers express this
+project's contribution, not official attainment scores.
+
+\begin{table}[H]
+\centering
+\caption{Evidence-based CO--PO mapping for this project}
+\label{tab:co-po}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}l*{11}{c}@{}}
+\toprule
+ & PO1 & PO2 & PO3 & PO4 & PO5 & PO6 & PO7 & PO8 & PO9 & PO10 & PO11 \\
+\midrule
+CO1 & 2 & 3 & -- & -- & -- & 1 & -- & -- & 1 & -- & -- \\
+CO2 & 3 & -- & 3 & -- & 3 & -- & -- & 2 & -- & -- & 2 \\
+CO3 & -- & 2 & -- & 3 & 2 & -- & -- & -- & 1 & -- & -- \\
+CO4 & -- & -- & -- & -- & -- & 1 & 2 & -- & 1 & -- & -- \\
+CO5 & -- & -- & -- & -- & 1 & -- & -- & 2 & -- & -- & 2 \\
+CO6 & -- & -- & -- & -- & -- & -- & -- & 2 & 1 & 2 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{CO--PSO Mapping}
+
+\begin{table}[H]
+\centering
+\caption{Evidence-based CO--PSO mapping for this project}
+\label{tab:co-pso}
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{CO} & \textbf{PSO1} & \textbf{PSO2} \\
+\midrule
+CO1 & 2 & 1 \\
+CO2 & 3 & 2 \\
+CO3 & 3 & 1 \\
+CO4 & 1 & 1 \\
+CO5 & 2 & 2 \\
+CO6 & 1 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Mapping Justification}
+
+\begin{description}[leftmargin=1.2cm, labelwidth=0.9cm, style=nextline]
+\item[CO1] The problem statement and literature review identify an
+unverified gap between generated reasoning and executable pipelines
+(Chapters~\ref{ch:intro}--\ref{ch:method}). This supports PO2 most
+directly and PSO1 through the AI and data-science context.
+\item[CO2] The team combines AutoML, service design and code analysis
+in an implemented prototype (Chapters~\ref{ch:design}
+and~\ref{ch:impl}), directly supporting PO1, PO3, PO5 and PSO1.
+\item[CO3] The 270-cell experiment and paired analysis produce
+inferences with stated limitations (Chapter~\ref{ch:results}),
+directly supporting PO4 and PSO1.
+\item[CO4] The SDG table discusses possible social and environmental
+applications, while the privacy and execution-safety section records
+engineering responsibilities (Table~\ref{tab:sdg};
+Chapter~\ref{ch:impl}). The limited PO6 score reflects the absence
+of measured impact.
+\item[CO5] The shared repositories and the literature-based technical
+work support teamwork and independent learning
+(Section~\ref{sec:appendix-opensource};
+Chapters~\ref{ch:lit}--\ref{ch:method}).
+\item[CO6] The controlled experimental plan, bounded attempts and
+recorded results show project coordination (Chapters~\ref{ch:impl}
+and~\ref{ch:results}). PO10 is partial because budgeting and
+financial management are not documented.
+\end{description}
+
+\section{Additional Evidence}
+
+Table~\ref{tab:additional-evidence} points to the supporting material
+already contained in this report or available through the project's
+public repositories. It does not imply conference acceptance, a
+patent, a grant, or participation in an external event.
+
+\begin{table}[H]
+\centering
+\caption{Additional evidence available for the major project}
+\label{tab:additional-evidence}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.4cm}
+  >{\raggedright\arraybackslash}p{9.3cm}@{}}
+\toprule
+\textbf{Evidence} & \textbf{Location and scope} \\
+\midrule
+Source and release record & Eight GitHub repository links and the
+Zenodo archive of \texttt{automl-infra v0.1.1} are in
+Section~\ref{sec:appendix-opensource}. \\
+Design artefacts & Architecture, workflow, use-case and database
+figures appear in Chapter~\ref{ch:design}. \\
+Implementation artefacts & Service diagrams, code excerpts and
+screenshots appear in Chapter~\ref{ch:impl}. \\
+Experimental results & The six-dataset panel, 270-cell sweep,
+comparisons and limitations appear in Chapter~\ref{ch:results}. \\
+\bottomrule
+\end{tabular}
+\end{table}

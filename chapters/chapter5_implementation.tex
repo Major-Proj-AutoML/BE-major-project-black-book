@@ -144,11 +144,11 @@ LLM; only derived descriptors are exposed downstream
 \subsection{Meta-Feature Service}
 
 For each dataset the service computes one JSON meta-feature object
-with four families --- \emph{simple} (counts, missingness,
+with four families: \emph{simple} (counts, missingness,
 cardinality, class balance), \emph{distributional} (skewness,
 kurtosis, outlier ratio), \emph{information} (mutual information,
 pairwise correlation, target entropy) and \emph{landmarking} (decision
-stump, linear/NB and 1-NN reference scores) --- and caches it in the
+stump, linear/NB and 1-NN reference scores). It caches the object in the
 \texttt{meta\_features} table. Column typing is handled by small,
 deterministic helpers (Fig.~\ref{fig:mf-helpers}).
 
@@ -250,13 +250,13 @@ pure-Python checks:
 \begin{enumerate}
     \item \textbf{Action presence.} Parse the generated code with
     \texttt{ast} into a set of referenced names (imports, called
-    functions, attributes, bare identifiers). The decision passes if
-    its cited \texttt{action} symbol is in that set --- catching a
-    preprocessor the LLM \emph{claimed} but never used.
+    functions, attributes, bare identifiers). The check passes when
+    the cited \texttt{action} symbol is in that set. Otherwise, it
+    flags an action absent from the code.
     \item \textbf{Value grounding.} Follow the decision's cited
     \texttt{meta\_feature} dotted path into the real meta-feature
     object and compare the LLM's cited \texttt{observed\_value} within
-    a $10^{-3}$ tolerance --- catching a \emph{fabricated or
+    a $10^{-3}$ tolerance, flagging a \emph{fabricated or
     misremembered} number.
 \end{enumerate}
 
@@ -300,10 +300,10 @@ is likewise designed but not wired. All of these remain future work.
 The implemented \texttt{main} verifier is the compact routine of
 Figure~\ref{fig:verify-impl} (presence and value grounding only); the
 flowchart of Figure~\ref{fig:verify-proposed} is the proposed full
-verifier of Chapter~\ref{ch:method} --- the RIR, the AST- and
+verifier of Chapter~\ref{ch:method}, comprising the RIR, the AST- and
 graph-based PIR, the three-valued conjunction over presence,
-parameters and ordering, the set-valued mapper and the aggregation ---
-which is specified but not implemented in this project.
+parameters and ordering, the set-valued mapper and the aggregation.
+It is specified but not implemented in this project.
 
 \begin{figure}[htbp]
     \centering
@@ -311,7 +311,7 @@ which is specified but not implemented in this project.
         \centering
         \includegraphics[width=\textwidth]{figures/project_figures/listing_5.1.png}
         \caption{Implemented (\texttt{main}): boolean faithfulness check
-        --- action presence + value grounding.}
+        for action presence and value grounding.}
         \label{fig:verify-impl}
     \end{subfigure}
     \hfill
@@ -339,23 +339,23 @@ execution}, not a hardened sandbox: each pipeline runs as a separate
 Python subprocess (no shared memory with the parent) under a wall-clock
 timeout, with its code and output persisted under \texttt{logs/runs/}
 for later inspection. This bounds run time and isolates process memory,
-but it is an operational safeguard, \emph{not} a security boundary ---
-the subprocess inherits the parent environment and has the same
+but it is an operational safeguard, \emph{not} a security boundary.
+The subprocess inherits the parent environment and has the same
 filesystem and network access as the host user, and there is no
 container, OS-level, filesystem or network isolation and no memory or
 CPU limit. Running genuinely untrusted code safely would require adding
 such isolation (a container or a restricted runtime), which is future
 work. Two data-safety measures are in place: a leakage guard flags any
 near-perfect score (\texttt{>=0.995}) on a classification task for
-review, and raw dataset rows are never sent to the LLM runner --- only
-meta-features and column descriptors are.
+review. Raw dataset rows are never sent to the LLM runner; it receives
+only meta-features and column descriptors.
 
 \section{Summary}
 
 The implemented system is a running stack of five FastAPI backend
 services, a Streamlit front-end and a Redis Queue worker that generates
 scikit-learn pipelines under three prompt conditions, runs them in a
-bounded subprocess, classifies failures, and --- for B2 ---
+bounded subprocess, classifies failures, and, for B2,
 mechanically checks the reasoning trace for action presence and
 value grounding, persisting run records to PostgreSQL and artefacts to
 the local filesystem. The

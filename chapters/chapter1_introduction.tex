@@ -182,8 +182,8 @@ The objectives of the project are:
     faithfulness check on the real meta-feature runs.
 
     \item To state honestly what this first check cannot yet do, and
-    to describe --- as a proposed design and future work, not a
-    delivered system --- the fuller claim-by-claim verifier that
+    to describe the fuller claim-by-claim verifier as a proposed
+    design and future work rather than a delivered system. This verifier
     would be needed to close the gap.
 \end{enumerate}
 
@@ -199,8 +199,8 @@ example a scaler, an imputer or a specific classifier) appears in the
 generated code, and whether each dataset statistic the plan cites
 (for example a missing-value ratio or a class-balance figure)
 matches the value actually computed from the data. A \emph{fuller}
-verifier --- designed in Chapter~\ref*{ch:method} but not implemented
-in this project --- would additionally check:
+verifier, designed in Chapter~\ref*{ch:method} but not implemented
+in this project, would additionally check:
 \begin{itemize}
     \item the columns to which each operator is applied,
     \item the parameters and ordering of the pipeline,
@@ -220,7 +220,7 @@ version of the system:
     AutoML frameworks other than scikit-learn-style tabular
     pipelines.
     \item Verification of the plan itself (whether the chosen
-    strategy is a good strategy for the task) --- the verifier only
+    strategy is a good strategy for the task): the verifier only
     checks implementation faithfulness relative to a given plan, not
     the plan's merit.
     \item Mechanistic faithfulness in the sense of
@@ -234,7 +234,7 @@ version of the system:
 
 \section{Contributions}
 
-The contributions of the project are of three kinds --- conceptual,
+The contributions of the project are of three kinds: conceptual,
 engineering and empirical.
 
 \begin{enumerate}
@@ -250,13 +250,13 @@ engineering and empirical.
     mismatch taxonomy for AutoML pipelines. This design is specified,
     not implemented, and is not evaluated in this report.
 
-    \item \textbf{(Engineering.)} A running, reproducible pipeline ---
+    \item \textbf{(Engineering.)} A running, reproducible pipeline comprising
     five FastAPI backend services (data, meta-features, generation,
     analysis and gateway) and a Streamlit front-end, a Redis-backed
     job queue and worker, a
     configurable LLM runner (Ollama cloud models in the reported
     runs), a bounded subprocess executor and a PostgreSQL database with
-    local-filesystem artefact storage --- that records the plan, code,
+    local-filesystem artefact storage. It records the plan, code,
     execution trace and score of every run.
 
     \item \textbf{(Engineering.)} A first mechanical faithfulness
@@ -277,17 +277,17 @@ engineering and empirical.
 
 \paragraph{Implementation and validation status.}
 To keep the claims of this report honest, the work is separated into
-three levels throughout. \emph{Designed} items --- the fuller
+three levels throughout. \emph{Designed} items, including the fuller
 claim-by-claim verifier, the mismatch taxonomy and the baseline
-comparison protocol --- are specified in Chapters~\ref*{ch:method}
+comparison protocol, are specified in Chapters~\ref*{ch:method}
 and~\ref*{ch:design} but are not implemented in this project.
-\emph{Implemented} items --- the five backend services and the
+\emph{Implemented} items, including the five backend services and the
 Streamlit front-end, the three prompt conditions, the bounded
-subprocess executor and the first faithfulness check --- exist and run
+subprocess executor and the first faithfulness check, exist and run
 on the
 project's
-\texttt{main} branch. \emph{Validated} items --- the prompting study
-and the first faithfulness check --- are supported by the 270-cell
+\texttt{main} branch. \emph{Validated} items, namely the prompting study
+and the first faithfulness check, are supported by the 270-cell
 sweep in Chapter~\ref*{ch:results}. The report never presents a
 designed item as though it were implemented or validated, and every
 number in Chapter~\ref*{ch:results} is traceable to the recorded
@@ -305,8 +305,8 @@ motivates the project.
 \textbf{Chapter~\ref*{ch:method}, Proposed Methodology}, defines
 the four correctness questions and the reasoning-code alignment
 relation, and sets out the \emph{proposed} design for a fuller
-verifier --- structured forms of the plan and the code, the matching
-rules, the mismatch taxonomy and the associated measures --- which is
+verifier comprising structured forms of the plan and the code, the matching
+rules, the mismatch taxonomy and the associated measures. This design is
 specified but not implemented in this project.
 
 \textbf{Chapter~\ref*{ch:design}, System Design}, presents the

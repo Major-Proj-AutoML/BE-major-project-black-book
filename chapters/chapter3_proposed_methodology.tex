@@ -43,11 +43,11 @@ tests operation \emph{presence} (whether each action the trace names
 appears in the generated code) and meta-feature \emph{value
 grounding} (whether each cited statistic matches the real
 meta-features within a tolerance), and returns a single boolean
-faithfulness verdict. Everything else described below --- the
+faithfulness verdict. The remaining mechanisms described below, including the
 graph-based (multigraph) Program IR, the set-valued mapper, the
 three- and four-valued verdicts, the full mismatch taxonomy of
 Table~\ref{tab:taxonomy}, the evaluation metrics and the baseline
-comparison --- is proposed and is \emph{not} implemented or evaluated
+comparison, are proposed and are \emph{not} implemented or evaluated
 in this project. The reader should treat every mechanism below as
 proposed unless Chapter~\ref{ch:impl} marks it implemented.
 \end{quote}
@@ -107,8 +107,8 @@ The input records the dataset reference, the target column, the task
 type (binary / multiclass / regression), the allowed or prohibited
 models, the preprocessing constraints, the evaluation metric, the
 split policy, the resource limits and the required outputs. Each
-field receives a provenance tag --- \texttt{USER},
-\texttt{INFERRED} or \texttt{DEFAULT} --- so that an unstated agent
+field receives a provenance tag (\texttt{USER},
+\texttt{INFERRED} or \texttt{DEFAULT}) so that an unstated agent
 assumption is never silently treated as a user requirement.
 
 \subsection{Reasoning Intermediate Representation (RIR)}
@@ -154,8 +154,8 @@ check reads that JSON from the script's output and tests it against the
 same script's code and the real meta-features. The trace is therefore
 \emph{post hoc}: the code and its stated reasoning come from one
 generation step, so the check measures the internal consistency of a
-single LLM response --- whether the script cites an action it did not
-import, or a number it did not read correctly --- rather than the
+single LLM response, such as whether the script cites an action it did not
+import or a number it did not read correctly, rather than the
 divergence of code from a plan fixed in advance by a human or by a
 separate planning stage. Capturing an independent pre-code plan would
 require a distinct planning step and is left to future work.
@@ -198,7 +198,7 @@ Calls are normalised into predicates such as
 \end{verbatim}
 Bodies or trusted summaries resolve aliases and wrappers. Constant
 propagation is conservative; unknown values are left symbolic.
-Dataflow provenance enables leakage checks --- for example, whether a
+Dataflow provenance enables leakage checks, such as whether a
 scaler was fitted before the train/validation split.
 
 For each claim, the mapper constructs program witnesses from the
@@ -209,18 +209,18 @@ claim, the expected predicate, the observed evidence, the source span,
 the verdict, the category and the severity.
 
 Verdicts are reported at two levels. Each individual claim receives a
-\emph{three-valued} verdict --- \textsc{aligned}, \textsc{misaligned}
-or \textsc{unverifiable} --- the last when there is not enough
-evidence to decide it. The claim verdicts are then aggregated, with
+\emph{three-valued} verdict: \textsc{aligned}, \textsc{misaligned}
+or \textsc{unverifiable}. The last applies when there is not enough
+evidence to decide a claim. The claim verdicts are then aggregated, with
 criticality gating, into a \emph{four-valued} pipeline verdict:
 \begin{itemize}
-    \item \textsc{Aligned} --- all decided claims align and no
+    \item \textsc{Aligned}: all decided claims align and no
     contradiction is present.
-    \item \textsc{Partially aligned} --- only non-critical claims
+    \item \textsc{Partially aligned}: only non-critical claims
     mismatch or remain unaccounted for.
-    \item \textsc{Misaligned} --- a critical claim fails or a
+    \item \textsc{Misaligned}: a critical claim fails or a
     contradiction is present.
-    \item \textsc{Unverifiable} --- there is not enough evidence to
+    \item \textsc{Unverifiable}: there is not enough evidence to
     decide the pipeline either way.
 \end{itemize}
 Abstention (\textsc{Unverifiable}) prevents uncertainty from turning
@@ -251,9 +251,9 @@ A_i^{\mathrm{dep}} .
 \]
 A three-valued conjunction returns $0$ if any required predicate is
 false, $1$ if all are true, and $\bot$ otherwise. In the implemented
-\texttt{main}-branch check only the first two conjuncts are evaluated
---- presence ($A^{\mathrm{pres}}$) and meta-feature value grounding
-(a form of $A^{\mathrm{sem}}$) --- and they are reduced to a single
+\texttt{main}-branch check only the first two conjuncts are evaluated:
+presence ($A^{\mathrm{pres}}$) and meta-feature value grounding
+(a form of $A^{\mathrm{sem}}$). They are reduced to a single
 boolean per run; the parameter, ordering and dependency conjuncts
 belong to the proposed design.
 
@@ -272,12 +272,12 @@ match, and $w_i > 0$ be a criticality weight assigned per claim type
 than an optional feature-selection claim).
 
 \begin{itemize}
-    \item \textbf{Claim coverage} --- the fraction of plan claims the
+    \item \textbf{Claim coverage}: the fraction of plan claims the
     verifier was able to decide, rather than leave unverifiable:
     \[
     C_{\mathrm{claim}} = \frac{1}{n}\sum_{i=1}^{n} v_i.
     \]
-    \item \textbf{Weighted semantic alignment} --- among the decided
+    \item \textbf{Weighted semantic alignment}: among the decided
     claims, the share that matched, with more important claims (for
     example a leakage-relevant ordering claim) weighted more heavily:
     \[
@@ -285,12 +285,12 @@ than an optional feature-selection claim).
     \]
     when the denominator is non-zero. Coverage must be reported
     alongside the score.
-    \item \textbf{Critical mismatch rate} --- the fraction of
+    \item \textbf{Critical mismatch rate}: the fraction of
     safety-critical claims (the set $K$) that were contradicted:
     \[
     \mathrm{CMR} = \frac{\sum_{i\in K}\mathbf{1}[A_i = 0]}{|K|}.
     \]
-    \item \textbf{Localisation} --- how well predicted mismatch
+    \item \textbf{Localisation}: how well predicted mismatch
     categories and their source locations match human labels, measured
     by category macro-F1 and source-span overlap. False-alignment
     and false-misalignment rates are reported separately.
@@ -371,7 +371,7 @@ ordering also hold. The verdict is \textsc{aligned}.
 \noindent\textbf{(5) The misalignment case.} Had the code instead
 used \texttt{StandardScaler} while the trace still claimed
 \texttt{RobustScaler}, then $A^{\mathrm{pres}}=0$ and the verdict is
-\textsc{misaligned} --- even though the pipeline compiles, runs and
+\textsc{misaligned}, even though the pipeline compiles, runs and
 may reach an identical score. This is precisely the failure that
 execution- and performance-based checks cannot see, and it is the
 check that the implemented \texttt{main}-branch verifier

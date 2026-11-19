@@ -29,10 +29,10 @@ coverage, weighted-alignment, critical-mismatch and localisation
 metric suite.
 
 Second, as an \emph{implementation} contribution, we build a working
-end-to-end LLM-driven AutoML stack --- five FastAPI microservices
+end-to-end LLM-driven AutoML stack comprising five FastAPI microservices
 and a Streamlit front-end, a Redis-backed job queue and worker, a
 configurable LLM runner (Ollama in the reported runs), a bounded
-subprocess executor, and a PostgreSQL store with artefacts on the local filesystem --- that generates
+subprocess executor, and a PostgreSQL store with artefacts on the local filesystem. The stack generates
 scikit-learn pipelines under three prompt
 conditions (B0 naive, B1 schema, B2 meta-feature-guided) and runs a
 first mechanical faithfulness verifier on every B2 run, checking that
@@ -53,7 +53,7 @@ the faithfulness check) and roughly 5--27$\times$ more expensive in
 prompt tokens, without any statistically significant improvement in
 predictive score (paired Wilcoxon over executed runs, all $p>0.09$). Crucially, the faithfulness verifier
 flagged seven B2 runs that executed successfully and produced good
-scores but whose stated reasoning did not match their code --- a
+scores but whose stated reasoning did not match their code. This is a
 failure mode that execution- and performance-based checks cannot
 detect. The richer graph-based verifier, the independent pre-code
 reasoning capture and the baseline comparison are designed but not

@@ -38,7 +38,7 @@ To address this, the project has:
     reports false-alignment rates, macro-F1 of category detection,
     and localisation accuracy with appropriate confidence
     intervals;
-    \item engineered a running end-to-end implementation --- five
+    \item engineered a running end-to-end implementation comprising five
     FastAPI services and a Streamlit front-end, a Redis Queue worker, a
     configurable LLM runner (Ollama in the reported runs), a bounded
     subprocess executor, a first faithfulness verifier, a PostgreSQL
@@ -165,12 +165,12 @@ presented; reasoning-code alignment cannot be replaced by execution
 correctness and predictive performance. This project formalised
 alignment, proposed the reasoning and program intermediate
 representations, defined the mechanical verdicts, metrics, taxonomy
-and baselines, and --- crucially --- built a running system and
+and baselines, and built a running system and
 measured it. On that first 270-cell run, seven pipelines that
 executed and scored well were caught contradicting their own
 reasoning: direct evidence that the divergence is real and
 mechanically detectable. The open empirical question is now narrower
-and sharper --- how \emph{often} successful AutoML code differs from
+and sharper: how \emph{often} successful AutoML code differs from
 its plan across models, tasks and complexity, and how precisely the
-divergence can be localised --- and the software, protocol and first
+divergence can be localised. The software, protocol and first
 measurements are in place to answer it.

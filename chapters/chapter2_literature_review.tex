@@ -41,8 +41,8 @@ include a multi-agent architecture that spans planning, code
 generation and verification. It performs three verification steps:
 \emph{request verification} (ReqVer), which assesses whether the
 user's instructions are clear and adequate for the ML task;
-\emph{execution verification} (ExecVer), which checks --- by
-prompting, before any code is run --- whether candidate pipelines
+\emph{execution verification} (ExecVer), which uses prompting before
+code execution to assess whether candidate pipelines
 satisfy the user's requirements; and \emph{implementation
 verification} (ImpVer), which validates the outcomes of code that has
 been compiled and executed. In this way AutoML-Agent explicitly
@@ -234,7 +234,7 @@ findings. Chapter~\ref{ch:results} reports preliminary evidence from
 the 270-cell study: $H_1$ is supported, since seven pipelines
 executed and scored well yet failed the faithfulness check. $H_2$ is
 illustrated by those same detections but is not quantitatively tested
-here --- the head-to-head comparison against execution- and
+here; the head-to-head comparison against execution- and
 performance-only baselines is left to future work, together with the
 fuller protocol needed to evaluate $H_3$ and $H_4$ at scale.
 
@@ -247,7 +247,7 @@ performance. Verification of reasoning in the LLM literature
 focuses on faithful or structured chains and attribution graphs,
 but these are not the AutoML pipeline that is deployed. Classical
 program verification offers the formal apparatus for
-specification-based reasoning, but requires a specification --- which
+specification-based reasoning, but requires a specification, which
 an LLM plan does not readily provide. The combination of these
 observations motivates a dedicated \emph{reasoning-code alignment}
 verification layer for LLM-driven AutoML, which is the subject of

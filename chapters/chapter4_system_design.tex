@@ -3,9 +3,9 @@
 
 \section{System Architecture}
 
-The system is organised as three logical tiers --- an \emph{ingestion
+The system is organised into three logical tiers: an \emph{ingestion
 and generation} tier, a \emph{run and verification} tier, and an
-\emph{analysis} tier --- that share a persistent store and a job
+\emph{analysis} tier. They share a persistent store and a job
 queue. The tiers correspond respectively to turning a user request
 into a plan and runnable code, to executing that code under
 supervision and verifying its alignment with the plan, and to
@@ -70,7 +70,7 @@ calls the configurable LLM runner (reached through
 cloud models), recording token usage.
 
 The emitted pipeline is executed inside a bounded Python subprocess
-(a separate process under a wall-clock timeout --- not container-level
+(a separate process under a wall-clock timeout, without container-level
 isolation) that captures stdout and stderr, extracts the achieved score,
 classifies failures into one of thirteen error categories and
 preserves failed outcomes. For \texttt{B2} runs a verification stage
@@ -132,14 +132,14 @@ Fig.~\ref{fig:architecture-flow} as follows:
 The three principal use cases are:
 
 \begin{itemize}
-    \item \emph{Submit workflow} --- a researcher uploads a dataset
+    \item \emph{Submit workflow}: a researcher uploads a dataset
     and a task specification, selects which research questions to
     exercise, and starts a sweep.
-    \item \emph{Audit a run} --- a researcher opens a single run,
+    \item \emph{Audit a run}: a researcher opens a single run,
     inspects its code, execution trace and (for \texttt{B2}) the
     faithfulness verdict together with the reasons recorded for any
     failed check.
-    \item \emph{Reproduce an analysis} --- a researcher regenerates
+    \item \emph{Reproduce an analysis}: a researcher regenerates
     the aggregate tables for RQ1--RQ5 from the stored run records,
     without re-running the LLM.
 \end{itemize}
@@ -196,7 +196,7 @@ Data flows through the system as follows:
 
 The system of record is \textbf{PostgreSQL~16}, accessed through
 SQLAlchemy ORM models. The schema has \emph{four} tables, defined so
-that every aggregate report can be rebuilt from raw rows --- the
+that every aggregate report can be rebuilt from raw rows; the
 analysis layer only reads, and never writes derived values back.
 Figure~\ref{fig:er} gives the entity-relationship overview and
 Figures~\ref{fig:schema-dataset}--\ref{fig:schema-sweep} show the
@@ -204,27 +204,27 @@ actual ORM definitions.
 
 \begin{itemize}
 \raggedright
-    \item \textbf{datasets} --- one row per registered dataset:
+    \item \textbf{datasets}: one row per registered dataset, with
     \texttt{id}, \texttt{name}, \texttt{source}
     (\texttt{openml}/\texttt{custom}), \texttt{openml\_id},
     \texttt{target\_col}, \texttt{task\_type}, \texttt{train\_path},
     \texttt{test\_path}, \texttt{n\_rows}, \texttt{n\_cols},
     \texttt{created\_at}.
-    \item \textbf{meta\_features} --- one row per dataset (enforced by
+    \item \textbf{meta\_features}: one row per dataset (enforced by
     a \texttt{UniqueConstraint} on \texttt{dataset\_id}): the full
     meta-feature profile as a \texttt{JSON} \texttt{features} column,
     plus \texttt{computed\_at}. This is the cache that the B2 prompt
     reads.
-    \item \textbf{run\_results} --- one row per executed cell:
+    \item \textbf{run\_results}: one row per executed cell, with
     \texttt{dataset\_id}, \texttt{condition}
     (\texttt{B0}/\texttt{B1}/\texttt{B2}), \texttt{llm\_backend},
     \texttt{seed}, \texttt{success}, \texttt{test\_score},
     \texttt{error\_category}, \texttt{iterations\_used},
     \texttt{runtime\_seconds}, \texttt{generated\_code\_path},
-    \texttt{prompt\_tokens}, \texttt{completion\_tokens}, and ---
-    for B2 only --- the \texttt{reasoning\_trace} and
+    \texttt{prompt\_tokens}, \texttt{completion\_tokens}, and, for
+    B2 only, the \texttt{reasoning\_trace} and
     \texttt{verification\_report} as \texttt{JSON}.
-    \item \textbf{sweep\_jobs} --- one row per enqueued sweep:
+    \item \textbf{sweep\_jobs}: one row per enqueued sweep, with
     \texttt{rq\_job\_id}, \texttt{status}, the cross-product
     \texttt{params} (\texttt{JSON}), and \texttt{total\_cells} /
     \texttt{completed\_cells} / \texttt{failed\_cells} progress
@@ -242,10 +242,10 @@ rather than creating duplicates.
 \begin{figure}[H]
     \centering
     \miroplaceholder{figures/project_figures/er_diagram.png}{%
-    Entity-relationship diagram of the four tables ---
+    Entity-relationship diagram of the four tables:
     \texttt{datasets} (1)\,$\rightarrow$\,(1) \texttt{meta\_features},
     \texttt{datasets} (1)\,$\rightarrow$\,(many) \texttt{run\_results},
-    and the independent \texttt{sweep\_jobs} queue table --- showing
+    and the independent \texttt{sweep\_jobs} queue table, showing
     primary keys, the \texttt{dataset\_id} foreign keys and the JSON
     columns.}
     \caption{Entity-relationship diagram of the PostgreSQL schema.}
