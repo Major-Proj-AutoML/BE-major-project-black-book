@@ -1,8 +1,8 @@
 \chapter{Supplementary Project Evidence}
 
 This appendix records the project team's publication preparation,
-source repositories, sustainable-development goals, course-outcome
-mappings, and supporting evidence relevant to the major project.
+source repositories, sustainable-development goals, and course-outcome
+mappings relevant to the major project.
 
 \section{Publication}
 \label{sec:appendix-publication}
@@ -46,6 +46,10 @@ student contributors and contains the
 (\href{https://zenodo.org/records/23543993}{Zenodo record}). This
 release archives the infrastructure repository; the GitHub links
 above identify the other project repositories.
+
+The OpenML datasets listed in Table~\ref{tab:datasets} are inputs to
+the evaluation. The project does not claim to have published a new
+dataset or contributed those datasets to OpenML.
 
 \section{Sustainable Development Goals}
 
@@ -243,59 +247,89 @@ CO6 & 1 & 1 \\
 \subsection{Mapping Justification}
 
 \begin{description}[leftmargin=1.2cm, labelwidth=0.9cm, style=nextline]
-\item[CO1] The problem statement and literature review identify an
-unverified gap between generated reasoning and executable pipelines
-(Chapters~\ref{ch:intro}--\ref{ch:method}). This supports PO2 most
-directly and PSO1 through the AI and data-science context.
-\item[CO2] The team combines AutoML, service design and code analysis
-in an implemented prototype (Chapters~\ref{ch:design}
-and~\ref{ch:impl}), directly supporting PO1, PO3, PO5 and PSO1.
-\item[CO3] The 270-cell experiment and paired analysis produce
-inferences with stated limitations (Chapter~\ref{ch:results}),
-directly supporting PO4 and PSO1.
-\item[CO4] The SDG table discusses possible social and environmental
-effects, while the privacy and execution-safety section records
-engineering responsibilities (Table~\ref{tab:sdg};
-Chapter~\ref{ch:impl}). The PO6 and PO7 scores are limited because
-societal and environmental impact was not measured.
-\item[CO5] The shared repositories and the literature-based technical
-work support teamwork and independent learning
-(Section~\ref{sec:appendix-opensource};
-Chapters~\ref{ch:lit}--\ref{ch:method}).
-\item[CO6] The controlled experimental plan, bounded attempts and
-recorded results show project coordination (Chapters~\ref{ch:impl}
-and~\ref{ch:results}). PO10 is partial because budgeting and
-financial management are not documented.
+\item[CO1] \textbf{Identifying a research need.} The problem statement
+and literature review identify a gap between an LLM's stated
+reasoning and the executable pipeline it generates
+(Chapters~\ref{ch:intro}--\ref{ch:method}).
+\textbf{POs mapped:} PO1 (2) reflects the engineering knowledge used
+to frame the problem; PO2 (3) reflects the direct analysis of the
+reasoning--code gap. PO6 (1) reflects only the possible wider uses
+listed in Table~\ref{tab:sdg}; PO9 (1) reflects the written problem
+statement. \textbf{PSOs mapped:} PSO1 (2) reflects the AI and
+data-science setting; PSO2 (1) reflects limited evidence of a
+professionally relevant problem definition.
+
+\item[CO2] \textbf{Applying knowledge in a group.} The four-student
+team implemented an AutoML prototype with services for dataset
+handling, pipeline generation and analysis
+(Chapters~\ref{ch:design} and~\ref{ch:impl};
+Section~\ref{sec:appendix-opensource}).
+\textbf{POs mapped:} PO1 (3) covers the applied machine-learning and
+software knowledge; PO3 (3) the implemented service design; PO5 (3)
+the engineering tools used. PO8 (2) is supported by the shared team
+repositories without assigning undocumented individual roles. PO11
+(2) reflects the study and integration of methods from several areas.
+\textbf{PSOs mapped:} PSO1 (3) reflects direct AI and data-science
+practice; PSO2 (2) reflects the completed applied prototype, without
+claiming any employment outcome.
+
+\item[CO3] \textbf{Drawing inferences from results.} The controlled
+270-cell experiment, paired comparisons and stated limitations
+support the reported conclusions (Chapter~\ref{ch:results}).
+\textbf{POs mapped:} PO2 (2) reflects analysis of observed failures;
+PO4 (3) reflects the designed investigation and interpretation of its
+results. PO5 (2) reflects the tools used for the experiment; PO9 (1)
+reflects communication of the findings in this report.
+\textbf{PSOs mapped:} PSO1 (3) reflects direct analysis of AutoML
+results; PSO2 (1) reflects a limited demonstration of analytical
+practice, not a career outcome.
+
+\item[CO4] \textbf{Considering societal and environmental impact.}
+Table~\ref{tab:sdg} identifies potential links to SDGs 4, 8, 9 and
+12. The implementation chapter also describes privacy and execution
+safety constraints (Chapter~\ref{ch:impl}).
+\textbf{POs mapped:} PO6 (1) reflects consideration of possible
+societal uses; PO7 (1) reflects the documented safety and privacy
+choices; PO9 (1) reflects their communication. These are limited
+mappings because no social or environmental impact was measured.
+\textbf{PSOs mapped:} PSO1 (1) and PSO2 (1) reflect only the limited
+professional relevance of considering those effects.
+
+\item[CO5] \textbf{Learning and working in a group.} The literature
+review, method development and shared repositories document technical
+learning and a collective implementation
+(Chapters~\ref{ch:lit}--\ref{ch:method};
+Section~\ref{sec:appendix-opensource}).
+\textbf{POs mapped:} PO5 (1) reflects learning the tools used in the
+prototype; PO8 (2) reflects shared project work; PO11 (2) reflects
+independent study across AutoML and program analysis.
+\textbf{PSOs mapped:} PSO1 (2) and PSO2 (2) reflect the team's applied
+technical learning. The report does not measure future lifelong
+learning or career success.
+
+\Needspace{11cm}
+\item[CO6] \textbf{Managing project work.} The factorial experiment
+plan, bounded attempts and recorded runs show technical planning and
+coordination (Chapters~\ref{ch:impl} and~\ref{ch:results}).
+\textbf{POs mapped:} PO8 (2) reflects shared execution of the project;
+PO9 (1) reflects reporting its plan and results; PO10 (2) reflects
+experimental planning. Financial management is not documented.
+\textbf{PSOs mapped:} PSO1 (1) and PSO2 (1) reflect the limited
+professional relevance of managing this technical study.
 \end{description}
 
-\section{Additional Evidence}
+\section*{Guide Verification}
+I hereby verify that the CO--PO and CO--PSO mappings of this project
+have been reviewed and corrected, wherever necessary, to accurately
+reflect the contribution of the project towards the prescribed Course
+Outcomes, Program Outcomes, and Program Specific Outcomes.
 
-Table~\ref{tab:additional-evidence} points to the supporting material
-already contained in this report or available through the project's
-public repositories. It does not imply conference acceptance, a
-patent, a grant, or participation in an external event.
-
-\begin{table}[H]
-\centering
-\caption{Additional evidence available for the major project}
-\label{tab:additional-evidence}
-\small
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.4cm}
-  >{\raggedright\arraybackslash}p{9.3cm}@{}}
-\toprule
-\textbf{Evidence} & \textbf{Location and scope} \\
-\midrule
-Source and release record & Eight GitHub repository links and the
-Zenodo archive of \texttt{automl-infra v0.1.1} are in
-Section~\ref{sec:appendix-opensource}. \\
-Design artefacts & Architecture, workflow, use-case and database
-figures appear in Chapter~\ref{ch:design}. \\
-Implementation artefacts & Service diagrams, code excerpts and
-screenshots appear in Chapter~\ref{ch:impl}. \\
-Experimental results & The six-dataset panel, 270-cell sweep,
-comparisons and limitations appear in Chapter~\ref{ch:results}. \\
-\bottomrule
+\vspace{2.5cm}
+\begin{flushright}
+\begin{tabular}{c}
+\rule{5cm}{0.4pt} \\[0.3cm]
+\textbf{\guidename} \\[0.2cm]
+\guideDesignation \\[0.3cm]
+Date: \rule{3cm}{0.4pt}
 \end{tabular}
-\end{table}
+\end{flushright}
